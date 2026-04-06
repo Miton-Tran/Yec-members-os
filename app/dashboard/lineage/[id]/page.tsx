@@ -31,7 +31,7 @@ export default async function KhoaBlogPage({ params }: { params: Promise<{ id: s
          
          <div className="max-w-4xl mx-auto relative z-10 flex items-start justify-between">
             <div>
-               <Link href={`/dashboard/members?khoaId=${khoa.id}&view=overview`} className="inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors mb-6 text-sm font-semibold border border-transparent hover:border-stone-700 px-3 py-1.5 -ml-3 rounded-lg">
+               <Link href={`/dashboard/yec-members?khoaId=${khoa.id}&view=overview`} className="inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors mb-6 text-sm font-semibold border border-transparent hover:border-stone-700 px-3 py-1.5 -ml-3 rounded-lg">
                   <ArrowLeft className="size-4" /> Quay lại không gian Khóa
                </Link>
                

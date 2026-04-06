@@ -262,7 +262,7 @@ export default function MemberForm({
       if (onSuccess) {
         onSuccess(currentPersonId);
       } else {
-        router.push("/dashboard/members/" + currentPersonId);
+        router.push("/dashboard/yec-members/" + currentPersonId);
         router.refresh();
       }
     } catch (err: any) {

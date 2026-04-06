@@ -52,7 +52,7 @@ export default function RelationshipManager({
     if (dashboardContext !== undefined) {
       setMemberModalId(id);
     } else {
-      router.push(`/dashboard/members/${id}`);
+      router.push(`/dashboard/yec-members/${id}`);
     }
   };
 

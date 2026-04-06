@@ -19,7 +19,7 @@ export default async function MyProfilePage() {
 
   if (person) {
     // If they already have a profile, just take them to their view page
-    redirect(`/dashboard/members/${person.id}`);
+    redirect(`/dashboard/yec-members/${person.id}`);
   }
 
   // If no person, they need to create one!

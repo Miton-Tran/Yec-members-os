@@ -45,6 +45,6 @@ export async function deleteMemberProfile(memberId: string) {
   }
 
   // 4. Revalidate and redirect
-  revalidatePath("/dashboard/members");
-  redirect("/dashboard/members");
+  revalidatePath("/dashboard/yec-members");
+  redirect("/dashboard/yec-members");
 }

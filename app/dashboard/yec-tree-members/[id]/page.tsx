@@ -62,7 +62,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
       <div className="w-full relative z-20 py-4 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard/members"
+            href="/dashboard/yec-members"
             className="p-2 -ml-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
             title="Quay lại danh sách"
           >
@@ -73,7 +73,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
         {effectiveCanEdit && (
           <div className="flex items-center gap-2.5">
             <Link
-              href={`/dashboard/members/${id}/edit`}
+              href={`/dashboard/yec-members/${id}/edit`}
               className="px-4 py-2 bg-stone-100/80 text-stone-700 rounded-lg hover:bg-stone-200 hover:text-stone-900 font-medium text-sm transition-all shadow-sm"
             >
               Chỉnh sửa

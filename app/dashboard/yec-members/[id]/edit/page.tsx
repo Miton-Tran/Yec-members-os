@@ -67,7 +67,7 @@ export default async function EditMemberPage({ params }: PageProps) {
       <div className="w-full relative z-20 py-4 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
-            href={`/dashboard/members/${id}`}
+            href={`/dashboard/yec-members/${id}`}
             className="p-2 -ml-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
             title="Quay lại danh sách"
           >

@@ -375,7 +375,7 @@ export async function importData(
   }
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/members");
+  revalidatePath("/dashboard/yec-members");
   revalidatePath("/dashboard/data");
 
   return {
