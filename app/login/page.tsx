@@ -15,6 +15,12 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import WheelPicker from "@/components/WheelPicker";
+
+const KHOA_OPTIONS = Array.from({ length: 70 }, (_, i) => ({
+  label: `K${i + 30}`,
+  value: `K${i + 30}`
+}));
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,20 +28,23 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [khoaId, setKhoaId] = useState("K55");
+
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
       if (hostname === config.demoDomain) {
         setIsDemo(true);
-        setEmail("giaphaos@homielab.com");
-        setPassword("giaphaos");
+        setEmail("admin@yec.vn");
+        setPassword("admin");
       }
     }
   }, []);
 
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const [isLogin, setIsLogin] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -71,6 +80,12 @@ export default function LoginPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName,
+              khoa_id: khoaId,
+            }
+          }
         });
 
         if (error) {
@@ -154,7 +169,7 @@ export default function LoginPage() {
             </h2>
             <p className="mt-3 text-sm text-stone-500 font-medium tracking-wide">
               {isLogin
-                ? "Đăng nhập để truy cập gia phả."
+                ? "Đăng nhập để truy cập nền tảng nội bộ."
                 : "Tạo tài khoản thành viên mới."}
             </p>
             {isDemo && (
@@ -172,6 +187,49 @@ export default function LoginPage() {
 
           <form className="space-y-5 relative z-10" onSubmit={handleSubmit}>
             <div className="space-y-4">
+              <AnimatePresence>
+                {!isLogin && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden mb-4"
+                  >
+                    <div className="flex items-end gap-3 mt-2 mb-2">
+                      <div className="flex-1 relative">
+                        <label className="block text-[13px] font-semibold text-stone-600 mb-1.5 ml-1">
+                          Họ và tên
+                        </label>
+                        <div className="relative flex items-center group h-[48px] rounded-xl bg-white/50 border border-stone-200/80 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400 transition-all duration-200">
+                          <UserPlus className="absolute left-3.5 size-5 text-stone-400 group-focus-within:text-amber-500 transition-colors" />
+                          <input
+                            type="text"
+                            required={!isLogin}
+                            className="bg-transparent text-[15px] font-medium text-stone-900 placeholder-stone-400 block w-full h-full pl-11 pr-4 outline-none"
+                            placeholder="Người dùng mới"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="w-[85px] shrink-0 relative">
+                        <label className="block text-[13px] font-semibold text-stone-600 mb-1.5 ml-1 text-center">
+                          Khóa
+                        </label>
+                        <div className="relative h-[48px] flex items-center group rounded-xl bg-white/50 border border-stone-200/80 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400 overflow-hidden">
+                          <WheelPicker
+                             options={KHOA_OPTIONS}
+                             value={khoaId}
+                             onChange={setKhoaId}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="relative">
                 <label
                   htmlFor="email-address"

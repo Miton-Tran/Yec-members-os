@@ -627,7 +627,7 @@ export default function RelationshipManager({
   if (loading)
     return (
       <div className="text-stone-500 text-sm">
-        Đang tải thông tin gia đình...
+        Đang tải thông tin kết nối...
       </div>
     );
 
@@ -1215,7 +1215,7 @@ export default function RelationshipManager({
                 htmlFor="spouse-note"
                 className="block text-xs font-medium text-stone-600 mb-1"
               >
-                Ghi chú mối quan hệ (Ví dụ: Vợ cả, Chồng thứ...)
+                Ghi chú mối quan hệ (Ví dụ: Người hướng dẫn dự án...)
               </label>
               <input
                 id="spouse-note"

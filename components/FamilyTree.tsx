@@ -45,7 +45,16 @@ export default function FamilyTree({
     DEFAULT_AUTO_COLLAPSE_LEVEL,
   );
 
-  const { showAvatar } = useDashboard();
+  const { showAvatar, currentTerm } = useDashboard();
+
+  // Helper: lấy club info từ club_roles_history khớp với term hiện tại
+  const getClubInfo = useCallback((person: Person) => {
+    if (!currentTerm) return null;
+    const history = (person.club_roles_history || []) as any[];
+    const entry = history.find((e: any) => e.term === currentTerm);
+    if (!entry) return null;
+    return { department: entry.department || "", role_title: entry.role_title || "" };
+  }, [currentTerm]);
 
   const {
     scale,
@@ -231,7 +240,7 @@ export default function FamilyTree({
           <div
             className={`flex relative z-10 items-stretch h-full${showAvatar ? " bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity" : ""}`}
           >
-            <FamilyNodeCard person={data.person} level={level} />
+            <FamilyNodeCard person={data.person} level={level} clubInfo={getClubInfo(data.person)} />
 
             {data.spouses.length > 0 &&
               data.spouses.map((spouseData, idx) => (
@@ -243,6 +252,7 @@ export default function FamilyTree({
                     role={spouseData.person.gender === "male" ? "Chồng" : "Vợ"}
                     note={spouseData.note}
                     level={level}
+                    clubInfo={getClubInfo(spouseData.person)}
                   />
                 </div>
               ))}

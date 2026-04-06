@@ -82,7 +82,7 @@ export default function MindmapTree({
           <Share2 className="size-8 text-stone-300" />
         </div>
         <p className="text-stone-500 font-medium tracking-wide">
-          Gia phả trống
+          Không có dữ liệu nhánh
         </p>
       </div>
     );

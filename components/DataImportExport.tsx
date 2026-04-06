@@ -230,7 +230,7 @@ export default function DataImportExport() {
               </h3>
               <p className="text-sm text-stone-500 mt-1">
                 Tải xuống định dạng file JSON, GEDCOM hoặc CSV (Zip). Chọn một
-                điểm gốc bên dưới để chỉ sao lưu nhánh gia đình đó, hoặc chọn
+                điểm gốc bên dưới để chỉ sao lưu thành viên của nhóm đó, hoặc chọn
                 &quot;Toàn bộ&quot; để xuất toàn bộ cây.
               </p>
             </div>
@@ -305,7 +305,7 @@ export default function DataImportExport() {
                 Phục hồi dữ liệu
               </h3>
               <p className="text-sm text-stone-500 mt-1">
-                Khôi phục cây gia phả từ file đã sao lưu (.json, .ged, hoặc
+                Khôi phục dữ liệu cây thành viên từ file đã sao lưu (.json, .ged, hoặc
                 .zip).
                 <span className="font-semibold text-rose-600 ml-1">
                   Cảnh báo: Tác vụ này sẽ xoá toàn bộ dữ liệu hiện tại!

@@ -18,6 +18,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
   const canEdit = profile?.role === "admin" || profile?.role === "editor";
 
   const supabase = await getSupabase();
+  const { data: authData } = await supabase.auth.getUser();
 
   // Fetch Person Public Data
   const { data: person, error } = await supabase
@@ -30,9 +31,12 @@ export default async function MemberDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch Private Data if Admin
+  const isOwner = person.user_id === authData.user?.id;
+  const effectiveCanEdit = canEdit || isOwner;
+
+  // Fetch Private Data if Admin or Owner
   let privateData = null;
-  if (isAdmin) {
+  if (isAdmin || isOwner) {
     const { data } = await supabase
       .from("person_details_private")
       .select("*")
@@ -40,6 +44,14 @@ export default async function MemberDetailPage({ params }: PageProps) {
       .single();
     privateData = data;
   }
+
+  // Fetch Khoas for status tags using Admin Client to bypass any RLS issue in SSR
+  const { getSupabaseAdmin } = await import("@/utils/supabase/admin");
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: khoas } = await supabaseAdmin
+    .from("khoas")
+    .select("*")
+    .order("year_start", { ascending: false });
 
   return (
     <div className="flex-1 w-full relative flex flex-col pb-8">
@@ -58,7 +70,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
           </Link>
           <h1 className="title">Chi Tiết Thành Viên</h1>
         </div>
-        {canEdit && (
+        {effectiveCanEdit && (
           <div className="flex items-center gap-2.5">
             <Link
               href={`/dashboard/members/${id}/edit`}
@@ -66,7 +78,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
             >
               Chỉnh sửa
             </Link>
-            <DeleteMemberButton memberId={id} />
+            {canEdit && <DeleteMemberButton memberId={id} />}
           </div>
         )}
       </div>
@@ -78,6 +90,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
             privateData={privateData}
             isAdmin={isAdmin}
             canEdit={canEdit}
+            khoas={khoas || []}
           />
         </div>
       </main>

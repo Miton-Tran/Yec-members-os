@@ -1,14 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart2, ChevronDown, Database, GitMerge, Info, Network, UserCircle, Users } from "lucide-react";
+import { BarChart2, ChevronDown, Database, GitMerge, Info, Network, UserCircle, Users, Search, ClipboardCheck } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import LogoutButton from "./LogoutButton";
 import { useUser } from "./UserProvider";
 
 export default function HeaderMenu() {
-  const { user, isAdmin } = useUser();
+  const { user, isAdmin, isEditor } = useUser();
   const userEmail = user?.email;
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -71,21 +71,30 @@ export default function HeaderMenu() {
               </Link>
 
               <Link
+                href="/dashboard/profile"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+              >
+                <UserCircle className="size-4" />
+                Hồ sơ của tôi
+              </Link>
+
+              <Link
                 href="/dashboard/members"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors"
               >
                 <Network className="size-4" />
-                Cây gia phả
+                Sơ đồ Tổ chức
               </Link>
               
               <Link
-                href="/dashboard/kinship"
+                href="/dashboard/search"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-blue-700 hover:bg-blue-50 transition-colors"
               >
-                <GitMerge className="size-4" />
-                Tra cứu danh xưng
+                <Search className="size-4" />
+                Tìm kiếm & Kết nối
               </Link>
 
               <Link
@@ -94,8 +103,23 @@ export default function HeaderMenu() {
                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-purple-700 hover:bg-purple-50 transition-colors"
               >
                 <BarChart2 className="size-4" />
-                Thống kê
+                Thống kê CLB
               </Link>
+
+              {isEditor && (
+                <>
+                  <div className="h-px bg-stone-100 my-1 mx-4" />
+                  <Link
+                    href="/dashboard/requests"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                  >
+                    <ClipboardCheck className="size-4" />
+                    Phê duyệt Yêu cầu
+                  </Link>
+                </>
+              )}
+
 
               {isAdmin && (
                 <>
@@ -120,7 +144,7 @@ export default function HeaderMenu() {
                     className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
                   >
                     <Network className="size-4" />
-                    Thứ tự gia phả
+                    Quản lý Khóa
                   </Link>
 
                   <Link

@@ -39,6 +39,7 @@ interface EventsListProps {
     is_deceased: boolean;
   }[];
   customEvents?: CustomEventRecord[];
+  userRole?: string;
 }
 
 const DAY_LABELS: Record<string, string> = {
@@ -64,10 +65,12 @@ function EventCard({
   event,
   index,
   onEditCustomEvent,
+  canEdit,
 }: {
   event: FamilyEvent;
   index: number;
   onEditCustomEvent: (e: FamilyEvent) => void;
+  canEdit: boolean;
 }) {
   const isBirthday = event.type === "birthday";
   const isCustom = event.type === "custom_event";
@@ -79,7 +82,7 @@ function EventCard({
 
   const handleClick = () => {
     if (isCustom) {
-      onEditCustomEvent(event);
+      if (canEdit) onEditCustomEvent(event);
     } else if (event.personId) {
       setMemberModalId(event.personId);
     }
@@ -128,7 +131,11 @@ function EventCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.04 }}
       onClick={handleClick}
-      className={`w-full text-left flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] hover:shadow-md group ${
+      className={`w-full text-left flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border transition-all ${
+        (isCustom && !canEdit) 
+          ? "cursor-default border-stone-200/60 shadow-sm" 
+          : "cursor-pointer active:scale-[0.98] hover:shadow-md hover:border-stone-300"
+      } group ${
         isToday
           ? "bg-amber-50 border-amber-300 shadow-sm"
           : isPast
@@ -236,10 +243,12 @@ function EventCard({
 export default function EventsList({
   persons,
   customEvents = [],
+  userRole = "member",
 }: EventsListProps) {
   const router = useRouter();
+  const canEdit = userRole === "admin" || userRole === "editor";
   const [filter, setFilter] = useState<
-    "all" | "birthday" | "death_anniversary" | "custom_event" | "past"
+    "all" | "birthday" | "custom_event" | "past"
   >("all");
   const [showCount, setShowCount] = useState(20);
   const [showDeceasedBirthdays, setShowDeceasedBirthdays] = useState(false);
@@ -381,13 +390,15 @@ export default function EventsList({
           </div>
         </div>
 
-        <button
-          onClick={handleOpenCreateModal}
-          className="relative z-10 w-full sm:w-auto px-5 py-3 rounded-xl bg-stone-800 text-white font-semibold hover:bg-stone-900 active:scale-95 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-        >
-          <Plus className="size-5 text-stone-300" />
-          <span>Thêm sự kiện</span>
-        </button>
+        {canEdit && (
+          <button
+            onClick={handleOpenCreateModal}
+            className="relative z-10 w-full sm:w-auto px-5 py-3 rounded-xl bg-stone-800 text-white font-semibold hover:bg-stone-900 active:scale-95 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          >
+            <Plus className="size-5 text-stone-300" />
+            <span>Thêm sự kiện CLB</span>
+          </button>
+        )}
       </motion.div>
 
       {/* Controls */}
@@ -398,8 +409,7 @@ export default function EventsList({
             [
               { key: "all", label: "Tất cả" },
               { key: "birthday", label: "Sinh nhật" },
-              { key: "death_anniversary", label: "Ngày giỗ" },
-              { key: "custom_event", label: "Tuỳ chỉnh" },
+              { key: "custom_event", label: "Sự kiện CLB" },
               { key: "past", label: "Đã qua" },
             ] as const
           ).map((tab) => (
@@ -458,6 +468,7 @@ export default function EventsList({
               event={event}
               index={i}
               onEditCustomEvent={handleOpenEditModal}
+              canEdit={canEdit}
             />
           ))}
         </div>

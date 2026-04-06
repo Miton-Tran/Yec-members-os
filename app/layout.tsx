@@ -14,6 +14,10 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: config.siteName,
   description: config.siteName,
+  icons: {
+    icon: '/new-yec-logo.webp',
+    apple: '/new-yec-logo.webp',
+  }
 };
 
 export default function RootLayout({

@@ -15,6 +15,11 @@ interface DashboardState {
   setView: (view: ViewMode) => void;
   rootId: string | null;
   setRootId: (id: string | null) => void;
+  currentKhoaId: string | null;
+  setCurrentKhoaId: (id: string | null) => void;
+  currentTerm: string | null;
+  setCurrentTerm: (term: string | null) => void;
+  pageMode: "tree" | "members";
 }
 
 export const DashboardContext = createContext<DashboardState | undefined>(
@@ -26,11 +31,15 @@ export function DashboardProvider({
   initialView,
   initialRootId,
   initialShowAvatar,
+  initialKhoaId,
+  pageMode,
 }: {
   children: React.ReactNode;
   initialView?: ViewMode;
   initialRootId?: string | null;
   initialShowAvatar?: boolean;
+  initialKhoaId?: string | null;
+  pageMode?: "tree" | "members";
 }) {
   const searchParams = useSearchParams();
 
@@ -43,10 +52,16 @@ export function DashboardProvider({
     () => initialShowAvatar ?? searchParams.get("avatar") !== "hide",
   );
   const [view, setViewState] = useState<ViewMode>(
-    () => initialView ?? (searchParams.get("view") as ViewMode | null) ?? "list",
+    () => initialView ?? (searchParams.get("view") as ViewMode | null) ?? "overview",
   );
   const [rootId, setRootIdState] = useState<string | null>(
     () => initialRootId ?? searchParams.get("rootId") ?? null,
+  );
+  const [currentKhoaId, setCurrentKhoaIdState] = useState<string | null>(
+    () => initialKhoaId ?? searchParams.get("khoaId") ?? null,
+  );
+  const [currentTerm, setCurrentTermState] = useState<string | null>(
+    () => searchParams.get("term") ?? null,
   );
 
   // Initialize from URL and listen to Next.js route changes
@@ -65,8 +80,14 @@ export function DashboardProvider({
       const rootIdParam = sp.get("rootId");
       setRootIdState(rootIdParam);
 
+      const khoaIdParam = sp.get("khoaId");
+      setCurrentKhoaIdState(khoaIdParam);
+
       const modalId = sp.get("memberModalId");
       setMemberModalId(modalId);
+
+      const termParam = sp.get("term");
+      setCurrentTermState(termParam);
     };
 
     syncFromURL();
@@ -121,6 +142,32 @@ export function DashboardProvider({
     }
   };
 
+  const setCurrentKhoaId = (id: string | null) => {
+    setCurrentKhoaIdState(id);
+    if (typeof window !== "undefined") {
+      const newUrl = new URL(window.location.href);
+      if (id) {
+        newUrl.searchParams.set("khoaId", id);
+      } else {
+        newUrl.searchParams.delete("khoaId");
+      }
+      window.history.replaceState(null, "", newUrl.toString());
+    }
+  };
+
+  const setCurrentTerm = (term: string | null) => {
+    setCurrentTermState(term);
+    if (typeof window !== "undefined") {
+      const newUrl = new URL(window.location.href);
+      if (term) {
+        newUrl.searchParams.set("term", term);
+      } else {
+        newUrl.searchParams.delete("term");
+      }
+      window.history.replaceState(null, "", newUrl.toString());
+    }
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -134,6 +181,11 @@ export function DashboardProvider({
         setView,
         rootId,
         setRootId,
+        currentKhoaId,
+        setCurrentKhoaId,
+        currentTerm,
+        setCurrentTerm,
+        pageMode: pageMode || "tree",
       }}
     >
       {children}
@@ -153,10 +205,15 @@ export function useDashboard(): DashboardState {
       setShowCreateMember: () => {},
       showAvatar: true,
       setShowAvatar: () => {},
-      view: "list",
+      view: "overview",
       setView: () => {},
       rootId: null,
       setRootId: () => {},
+      currentKhoaId: null,
+      setCurrentKhoaId: () => {},
+      currentTerm: null,
+      setCurrentTerm: () => {},
+      pageMode: "tree",
     };
   }
   return context;

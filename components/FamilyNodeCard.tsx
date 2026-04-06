@@ -15,6 +15,7 @@ interface FamilyNodeCardProps {
   isRingVisible?: boolean;
   isPlusVisible?: boolean;
   level: number;
+  clubInfo?: { department?: string; role_title?: string } | null;
 }
 
 export default function FamilyNodeCard({
@@ -23,6 +24,7 @@ export default function FamilyNodeCard({
   onClickName,
   isRingVisible = false,
   isPlusVisible = false,
+  clubInfo,
 }: FamilyNodeCardProps) {
   const { showAvatar, setMemberModalId } = useDashboard();
 
@@ -107,6 +109,20 @@ export default function FamilyNodeCard({
                 </span>
               ))}
         </div>
+        {clubInfo && (
+          <div className="flex flex-col items-center gap-0.5 mt-0.5">
+            {clubInfo.department && clubInfo.department !== "Không thuộc ban" && (
+              <span className="text-[8px] sm:text-[9px] font-bold text-amber-600 uppercase tracking-wider leading-tight text-center">
+                {clubInfo.department}
+              </span>
+            )}
+            {clubInfo.role_title && (
+              <span className="text-[8px] sm:text-[9px] font-semibold text-stone-500 leading-tight text-center">
+                {clubInfo.role_title}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -14,7 +14,23 @@ export default async function EditMemberPage({ params }: PageProps) {
   const profile = await getProfile();
   const isAdmin = profile?.role === "admin";
   const isEditor = profile?.role === "editor";
-  if (!isAdmin && !isEditor) {
+  const supabase = await getSupabase();
+  const { data: authData } = await supabase.auth.getUser();
+
+  // Fetch Public Data
+  const { data: person, error } = await supabase
+    .from("persons")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !person) {
+    notFound();
+  }
+
+  const isOwner = !!authData.user && person.user_id === authData.user.id;
+
+  if (!isAdmin && !isEditor && !isOwner) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
         <div className="text-center">
@@ -29,22 +45,9 @@ export default async function EditMemberPage({ params }: PageProps) {
     );
   }
 
-  const supabase = await getSupabase();
-
-  // Fetch Public Data
-  const { data: person, error } = await supabase
-    .from("persons")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !person) {
-    notFound();
-  }
-
   // Fetch Private Data
   let privateData = null;
-  if (isAdmin) {
+  if (isAdmin || isOwner) {
     const { data } = await supabase
       .from("person_details_private")
       .select("*")
@@ -53,7 +56,7 @@ export default async function EditMemberPage({ params }: PageProps) {
     privateData = data;
   }
 
-  const initialData = isAdmin  ? { ...person, ...privateData }  : { ...person };
+  const initialData = (isAdmin || isOwner)  ? { ...person, ...privateData }  : { ...person };
 
   return (
     <div className="flex-1 w-full relative flex flex-col pb-8">

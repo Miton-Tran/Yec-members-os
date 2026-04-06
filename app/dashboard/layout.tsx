@@ -61,10 +61,10 @@ export default async function DashboardLayout({
             <p className="text-stone-600">
               Tài khoản của bạn đã được đăng ký thành công. Tuy nhiên, hệ thống
               yêu cầu Quản trị viên kích hoạt tài khoản của bạn trước khi bạn có
-              thể xem các thông tin gia đình.
+              thể xem các thông tin thành viên.
             </p>
             <p className="text-stone-500 text-sm mt-4 italic">
-              Vui lòng liên hệ lại với người quản trị dòng họ để được cấp quyền
+              Vui lòng liên hệ lại với người quản trị hệ thống để được cấp quyền
               sớm nhất.
             </p>
           </div>

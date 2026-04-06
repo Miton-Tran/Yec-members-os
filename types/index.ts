@@ -52,6 +52,60 @@ export interface Person {
   birth_order: number | null;
   generation: number | null;
   other_names: string | null;
+  khoa_id?: string | null;
+
+  // CV / Club specific fields
+  bio_long?: string | null;
+  company?: string | null;
+  industry?: string | null;
+  skills?: string[] | null;
+  achievements?: string[] | null;
+  looking_for_connections?: string[] | null;
+  user_id?: string | null;
+  social_link?: string | null;
+
+  club_role_level?: number | null;
+  club_role_title?: string | null;
+
+  // New CV fields
+  status?: string | null;
+  name_tag?: string | null;
+  marital_status?: string | null;
+  yec_status?: string | null;
+
+  club_roles_history?: ClubRoleHistoryItem[] | null;
+}
+
+export interface ClubRoleHistoryItem {
+  khoa_id?: string | null;
+  khoa_name?: string;
+  term: string;
+  role_level: number | null;
+  department?: string;
+  role_title: string;
+  yec_status?: string;
+}
+
+export interface EditRequest {
+  id: string;
+  person_id: string;
+  requested_by: string;
+  changes: any;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Khoa {
+  id: string;
+  name: string;
+  year_start: number | null;
+  year_end: number | null;
+  summary: string | null;
+  highlights: any | null;
+  yec_generation?: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Relationship {

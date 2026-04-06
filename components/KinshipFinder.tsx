@@ -474,24 +474,23 @@ export default function KinshipFinder({ persons, relationships }: Props) {
                   <ol className="space-y-2 text-sm text-blue-800">
                     <li className="flex gap-2">
                       <span className="font-bold shrink-0">1.</span>
-                      Hệ thống xây dựng đồ thị gia phả từ toàn bộ quan hệ huyết
-                      thống và hôn nhân.
+                      Hệ thống xây dựng đồ thị kết nối từ toàn bộ dữ liệu quan hệ
+                      trong câu lạc bộ.
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold shrink-0">2.</span>
-                      Tìm <strong>Tổ tiên chung gần nhất (LCA)</strong> để xác
-                      định khoảng cách thế hệ.
+                      Tìm <strong>Điểm kết nối chung gần nhất</strong> để xác
+                      định khỏang cách.
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold shrink-0">3.</span>
-                      Xác định <strong>vế Nội/Ngoại</strong> dựa trên giới tính
-                      của tổ tiên tại điểm rẽ nhánh.
+                      Xác định <strong>vế liên kết</strong> theo dữ liệu
+                      đầu vào.
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold shrink-0">4.</span>
                       So sánh <strong>thứ bậc (seniority)</strong> giữa các
-                      nhanh từ tổ tiên chung để quyết định quan hệ
-                      &quot;Anh/Em&quot; hoặc &quot;Bác/Chú&quot;.
+                      nhánh từ điểm chung.
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold shrink-0">5.</span>
@@ -520,8 +519,8 @@ export default function KinshipFinder({ persons, relationships }: Props) {
                     </li>
                     <li className="flex gap-2">
                       <span className="text-amber-400 shrink-0">•</span>
-                      <strong>Thứ tự sinh (Birth Order)</strong> là yếu tố then
-                      chốt để phân định thứ bậc Anh/Em trong dòng họ.
+                      <strong>Thứ tự Khóa/Sinh</strong> là yếu tố then
+                      chốt để phân định thứ bậc Tiền bối/Hậu bối trong câu lạc bộ.
                     </li>
                   </ul>
                 </div>

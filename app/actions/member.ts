@@ -23,13 +23,13 @@ export async function deleteMemberProfile(memberId: string) {
 
   if (relationshipError) {
     console.error("Error checking relationships:", relationshipError);
-    return { error: "Lỗi kiểm tra mối quan hệ gia đình." };
+    return { error: "Lỗi kiểm tra mối quan hệ." };
   }
 
   if (relationships && relationships.length > 0) {
     return {
       error:
-        "Không thể xoá. Vui lòng xoá hết các mối quan hệ gia đình của người này trước.",
+        "Không thể xoá. Vui lòng xoá hết các mối quan hệ của người này trước.",
     };
   }
 

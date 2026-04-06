@@ -2,7 +2,7 @@
 
 import MemberDetailContent from "@/components/MemberDetailContent";
 import MemberForm from "@/components/MemberForm";
-import { Person } from "@/types";
+import { Khoa, Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ArrowLeft, Edit2, ExternalLink, X } from "lucide-react";
 import Link from "next/link";
@@ -10,15 +10,20 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useDashboard } from "./DashboardContext";
 import { useUser } from "./UserProvider";
+import { getMemberStatusTag } from "@/utils/clubLogic";
 
-export default function MemberDetailModal() {
+interface MemberDetailModalProps {
+  khoas?: Khoa[];
+}
+
+export default function MemberDetailModal({ khoas = [] }: MemberDetailModalProps) {
   const {
     memberModalId: memberId,
     setMemberModalId,
     showCreateMember,
     setShowCreateMember,
   } = useDashboard();
-  const { isAdmin, isEditor: canEdit, supabase } = useUser();
+  const { isAdmin, isEditor: canEdit, supabase, user } = useUser();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -55,17 +60,25 @@ export default function MemberDetailModal() {
         }
         setPerson(personData);
 
-        // 2. Fetch Private Data if Admin
-        if (isAdmin) {
-          const { data: privData } = await supabase
-            .from("person_details_private")
-            .select("*")
-            .eq("person_id", id)
-            .single();
-          setPrivateData(privData || {});
-        } else {
-          setPrivateData(null);
+        // Fetch Khoa name if applicable
+        if (personData.khoa_id) {
+          const { data: khoaData } = await supabase
+             .from("khoas")
+             .select("name")
+             .eq("id", personData.khoa_id)
+             .single();
+          if (khoaData) {
+             personData.khoa_name = khoaData.name;
+          }
         }
+
+        // 2. Fetch Private Data (Now Public Contact Info)
+        const { data: privData } = await supabase
+          .from("person_details_private")
+          .select("*")
+          .eq("person_id", id)
+          .single();
+        setPrivateData(privData || {});
       } catch (err) {
         console.error("Error fetching member details:", err);
         // @ts-expect-error - err is caught as unknown, but we check for message
@@ -179,16 +192,13 @@ export default function MemberDetailModal() {
               {isEditing ? (
                 /* In edit mode — show back button */
                 <button
-                  onClick={() => {
-                    setIsEditing(false);
-                  }}
+                  onClick={() => setIsEditing(false)}
                   className="flex items-center gap-1.5 px-4 py-2 bg-stone-100/80 text-stone-700 rounded-full hover:bg-stone-200 font-semibold text-sm shadow-sm border border-stone-200/50 transition-colors"
                 >
                   <ArrowLeft className="size-4" />
                   <span className="hidden sm:inline">Quay lại</span>
                 </button>
               ) : (
-                canEdit &&
                 person && (
                   <>
                     <Link
@@ -198,13 +208,15 @@ export default function MemberDetailModal() {
                       <ExternalLink className="size-4" />
                       <span className="hidden sm:inline">Xem</span>
                     </Link>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-amber-100/80 text-amber-800 rounded-full hover:bg-amber-200 font-semibold text-sm shadow-sm border border-amber-200/50 transition-colors"
-                    >
-                      <Edit2 className="size-4" />
-                      <span className="hidden sm:inline">Chỉnh sửa</span>
-                    </button>
+                    {(canEdit || (user && person.user_id === user.id)) && (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-amber-100/80 text-amber-800 rounded-full hover:bg-amber-200 font-semibold text-sm shadow-sm border border-amber-200/50 transition-colors"
+                      >
+                        <Edit2 className="size-4" />
+                        <span className="hidden sm:inline">Chỉnh sửa</span>
+                      </button>
+                    )}
                   </>
                 )
               )}
@@ -270,7 +282,7 @@ export default function MemberDetailModal() {
                       >[0]["initialData"]
                     }
                     isEditing={true}
-                    isAdmin={isAdmin}
+                    isAdmin={canEdit}
                     onSuccess={handleEditSuccess}
                     onCancel={() => setIsEditing(false)}
                   />
@@ -289,7 +301,7 @@ export default function MemberDetailModal() {
                     Thêm thành viên mới
                   </h2>
                   <MemberForm
-                    isAdmin={isAdmin}
+                    isAdmin={canEdit}
                     onSuccess={handleCreateSuccess}
                     onCancel={closeModal}
                   />
@@ -308,6 +320,7 @@ export default function MemberDetailModal() {
                     person={person}
                     privateData={privateData}
                     isAdmin={isAdmin}
+                    khoas={khoas}
                     canEdit={canEdit}
                   />
                 </motion.div>

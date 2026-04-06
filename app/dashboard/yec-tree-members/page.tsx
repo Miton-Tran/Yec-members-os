@@ -1,5 +1,6 @@
 import { DashboardProvider } from "@/components/DashboardContext";
 import DashboardViews from "@/components/DashboardViews";
+import KhoaSidebar from "@/components/KhoaSidebar";
 import MemberDetailModal from "@/components/MemberDetailModal";
 import ViewToggle from "@/components/ViewToggle";
 import { getProfile, getSupabase } from "@/utils/supabase/queries";
@@ -7,32 +8,30 @@ import { getProfile, getSupabase } from "@/utils/supabase/queries";
 import { ViewMode } from "@/components/ViewToggle";
 
 interface PageProps {
-  searchParams: Promise<{ view?: string; rootId?: string; avatar?: string }>;
+  searchParams: Promise<{ view?: string; rootId?: string; avatar?: string; khoaId?: string }>;
 }
 export default async function FamilyTreePage({ searchParams }: PageProps) {
-  const { view, rootId, avatar } = await searchParams;
+  const { view, rootId, avatar, khoaId } = await searchParams;
   const initialView = view as ViewMode | undefined;
   const initialShowAvatar = avatar !== "hide";
 
   const profile = await getProfile();
   const canEdit = profile?.role === "admin" || profile?.role === "editor";
 
-  // If view is list, we only need persons, not relationships.
-  // We fetch persons for all views to pass down as a prop if we want, or let components fetch.
-  // Actually, to make transitions fast and avoid duplicate fetching across components,
-  // we will fetch data here and pass it down as props.
   const supabase = await getSupabase();
 
-  const [personsRes, relsRes] = await Promise.all([
+  const [personsRes, relsRes, khoasRes] = await Promise.all([
     supabase
       .from("persons")
       .select("*")
       .order("birth_year", { ascending: true, nullsFirst: false }),
     supabase.from("relationships").select("*"),
+    supabase.from("khoas").select("*").order("year_start", { ascending: false }),
   ]);
 
   const persons = personsRes.data || [];
   const relationships = relsRes.data || [];
+  const khoas = khoasRes.data || [];
 
   // Prepare map and roots for tree views
   const personsMap = new Map();
@@ -63,15 +62,23 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
       initialView={initialView}
       initialRootId={finalRootId}
       initialShowAvatar={initialShowAvatar}
+      initialKhoaId={khoaId}
+      pageMode="tree"
     >
-      <ViewToggle />
-      <DashboardViews
-        persons={persons}
-        relationships={relationships}
-        canEdit={canEdit}
-      />
-
-      <MemberDetailModal />
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden w-full relative">
+        <KhoaSidebar khoas={khoas} persons={persons} />
+        
+        <div className="flex-1 flex flex-col overflow-auto bg-stone-50/50 relative">
+          <ViewToggle />
+          <DashboardViews
+            persons={persons}
+            relationships={relationships}
+            khoas={khoas}
+            canEdit={canEdit}
+          />
+        </div>
+      </div>
+      <MemberDetailModal khoas={khoas} />
     </DashboardProvider>
   );
 }

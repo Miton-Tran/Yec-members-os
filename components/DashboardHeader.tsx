@@ -14,14 +14,14 @@ export default function DashboardHeader() {
           >
             <div className="relative size-8 rounded-lg overflow-hidden shrink-0 border border-stone-200/50 transition-all">
               <Image
-                src="/icon.png"
+                src="/new-yec-logo.webp"
                 alt="Logo"
                 fill
                 className="object-contain"
                 sizes="32px"
               />
             </div>
-            <h1 className="text-xl sm:text-2xl font-serif font-bold text-stone-800 group-hover:text-amber-700 transition-colors">
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-orange-500 group-hover:text-orange-600 transition-colors">
               {config.siteName}
             </h1>
           </Link>

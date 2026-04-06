@@ -24,7 +24,7 @@ export default async function KinshipPage() {
       <div className="w-full relative z-20 py-6 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
         <h1 className="title">Tra cứu danh xưng</h1>
         <p className="text-stone-500 mt-1 text-sm">
-          Chọn hai thành viên để tự động tính cách gọi theo quan hệ gia phả
+          Chọn hai thành viên để xem mối liên hệ
         </p>
       </div>
 

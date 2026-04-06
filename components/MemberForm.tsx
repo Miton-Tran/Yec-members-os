@@ -1,6 +1,7 @@
 "use client";
 
-import { Gender, Person } from "@/types";
+import { saveMemberAction } from "@/app/actions/profile";
+import { Gender, Person, Khoa, ClubRoleHistoryItem } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import {
@@ -11,13 +12,18 @@ import {
   Lock,
   MapPin,
   Phone,
+  Plus,
   Settings2,
   Trash2,
   User,
 } from "lucide-react";
-import { Lunar, Solar } from "lunar-javascript";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const PREDEFINED_STATUSES = ["Học ĐH", "Hoạt động CLB", "Du học", "Đi làm", "Thất nghiệp", "Khác"];
+const PREDEFINED_MARITAL = ["Độc thân", "Đã kết hôn", "Đang hẹn hò", "Khác"];
+const PREDEFINED_DEPARTMENTS = ["Ban Chủ nhiệm", "Ban Chuyên môn", "Ban Truyền thông", "Ban Đối ngoại", "Ban Tài chính", "Ban Sự kiện", "Ban Nhân sự", "Không thuộc ban"];
+
 
 interface MemberFormProps {
   initialData?: Person;
@@ -54,40 +60,35 @@ export default function MemberForm({
   const [birthDay, setBirthDay] = useState<number | "">(
     initialData?.birth_day || "",
   );
+  
+  const [khoaId, setKhoaId] = useState(initialData?.khoa_id || "");
 
-  const [deathYear, setDeathYear] = useState<number | "">(
-    initialData?.death_year || "",
-  );
-  const [deathMonth, setDeathMonth] = useState<number | "">(
-    initialData?.death_month || "",
-  );
-  const [deathDay, setDeathDay] = useState<number | "">(
-    initialData?.death_day || "",
-  );
+  const [clubRolesHistory, setClubRolesHistory] = useState<ClubRoleHistoryItem[]>(() => {
+    if (initialData?.club_roles_history && initialData.club_roles_history.length > 0) {
+      return initialData.club_roles_history;
+    }
+    if (initialData?.khoa_id || initialData?.club_role_title) {
+       return [{
+         term: "",
+         role_level: initialData.club_role_level ?? 4,
+         department: "",
+         role_title: initialData.club_role_title || ""
+       }];
+    }
+    return [{ term: "", role_level: 4, department: "", role_title: "" }];
+  });
 
-  const [deathLunarYear, setDeathLunarYear] = useState<number | "">(
-    initialData?.death_lunar_year || "",
-  );
-  const [deathLunarMonth, setDeathLunarMonth] = useState<number | "">(
-    initialData?.death_lunar_month || "",
-  );
-  const [deathLunarDay, setDeathLunarDay] = useState<number | "">(
-    initialData?.death_lunar_day || "",
-  );
 
-  const [isDeceased, setIsDeceased] = useState<boolean>(
-    initialData?.is_deceased || false,
-  );
-  const [isInLaw, setIsInLaw] = useState<boolean>(
-    initialData?.is_in_law || false,
-  );
-
-  const [birthOrder, setBirthOrder] = useState<number | "">(
-    initialData?.birth_order || "",
-  );
-  const [generation, setGeneration] = useState<number | "">(
-    initialData?.generation || "",
-  );
+  const [khoasList, setKhoasList] = useState<Khoa[]>([]);
+  useEffect(() => {
+    supabase
+      .from("khoas")
+      .select("*")
+      .order("year_start", { ascending: false })
+      .then(({ data }) => {
+        if (data) setKhoasList(data);
+      });
+  }, [supabase]);
 
   const [avatarUrl, setAvatarUrl] = useState(initialData?.avatar_url || "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -97,10 +98,60 @@ export default function MemberForm({
 
   const [note, setNote] = useState(initialData?.note || "");
 
-  // Private fields
+  // CV / Club Fields
+  const [statusOption, setStatusOption] = useState(() => {
+    if (!initialData?.status) return "";
+    return PREDEFINED_STATUSES.includes(initialData.status) ? initialData.status : "Khác";
+  });
+  const [statusCustom, setStatusCustom] = useState(() => {
+    if (!initialData?.status) return "";
+    return !PREDEFINED_STATUSES.includes(initialData.status) ? initialData.status : "";
+  });
+  const [nameTag, setNameTag] = useState(initialData?.name_tag || "");
+
+  const [maritalStatusOption, setMaritalStatusOption] = useState(() => {
+    if (!initialData?.marital_status) return "";
+    return PREDEFINED_MARITAL.includes(initialData.marital_status) ? initialData.marital_status : "Khác";
+  });
+  const [maritalStatusCustom, setMaritalStatusCustom] = useState(() => {
+    if (!initialData?.marital_status) return "";
+    return !PREDEFINED_MARITAL.includes(initialData.marital_status) ? initialData.marital_status : "";
+  });
+
+  const [bioLong, setBioLong] = useState(initialData?.bio_long || "");
+  const [company, setCompany] = useState(initialData?.company || "");
+  const [industry, setIndustry] = useState(initialData?.industry || "");
+  
+  const [skillsStr, setSkillsStr] = useState((initialData?.skills || []).join(", "));
+  const [achievementsList, setAchievementsList] = useState<{ time: string; title: string; description: string }[]>(() => {
+    const initAchs = initialData?.achievements || [];
+    if (initAchs.length === 0) return [{ time: "", title: "", description: "" }];
+    return initAchs.map(ach => {
+      try {
+        const parsed = JSON.parse(ach);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            time: parsed.time || "",
+            title: parsed.title || "",
+            description: parsed.description || ""
+          };
+        }
+        return { time: "", title: ach, description: "" };
+      } catch {
+        return { time: "", title: ach, description: "" };
+      }
+    });
+  });
+  const [lookingForStr, setLookingForStr] = useState((initialData?.looking_for_connections || []).join(", "));
+
+  // Contact fields (previously private)
   const [phoneNumber, setPhoneNumber] = useState(
     initialData?.phone_number ?? "",
   );
+  const [socialLink, setSocialLink] = useState(
+    initialData?.social_link ?? "",
+  );
+
   const [occupation, setOccupation] = useState(
     initialData?.occupation ?? "",
   );
@@ -118,72 +169,6 @@ export default function MemberForm({
       .replace(/(\s+)/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-+|-+$/g, "");
-  };
-
-  const handleSolarDeathChange = (
-    field: "day" | "month" | "year",
-    val: string,
-  ) => {
-    const num = val ? Number(val) : "";
-    let d = deathDay;
-    let m = deathMonth;
-    let y = deathYear;
-
-    if (field === "day") {
-      d = num;
-      setDeathDay(num);
-    } else if (field === "month") {
-      m = num;
-      setDeathMonth(num);
-    } else if (field === "year") {
-      y = num;
-      setDeathYear(num);
-    }
-
-    if (d !== "" && m !== "" && y !== "" && y > 100) {
-      try {
-        const solar = Solar.fromYmd(y, m, d);
-        const lunar = solar.getLunar();
-        setDeathLunarDay(lunar.getDay());
-        setDeathLunarMonth(Math.abs(lunar.getMonth()));
-        setDeathLunarYear(lunar.getYear());
-      } catch {
-        // Ignore invalid dates
-      }
-    }
-  };
-
-  const handleLunarDeathChange = (
-    field: "day" | "month" | "year",
-    val: string,
-  ) => {
-    const num = val ? Number(val) : "";
-    let d = deathLunarDay;
-    let m = deathLunarMonth;
-    let y = deathLunarYear;
-
-    if (field === "day") {
-      d = num;
-      setDeathLunarDay(num);
-    } else if (field === "month") {
-      m = num;
-      setDeathLunarMonth(num);
-    } else if (field === "year") {
-      y = num;
-      setDeathLunarYear(num);
-    }
-
-    if (d !== "" && m !== "" && y !== "" && y > 100) {
-      try {
-        const lunar = Lunar.fromYmd(y, m, d);
-        const solar = lunar.getSolar();
-        setDeathDay(solar.getDay());
-        setDeathMonth(solar.getMonth());
-        setDeathYear(solar.getYear());
-      } catch {
-        // Ignore invalid dates
-      }
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -215,82 +200,6 @@ export default function MemberForm({
       return;
     }
 
-    let finalDeathDay = deathDay;
-    let finalDeathMonth = deathMonth;
-    let finalDeathYear = deathYear;
-    let finalDeathLunarDay = deathLunarDay;
-    let finalDeathLunarMonth = deathLunarMonth;
-    let finalDeathLunarYear = deathLunarYear;
-
-    if (
-      isDeceased &&
-      deathLunarDay !== "" &&
-      deathLunarMonth !== "" &&
-      deathLunarYear !== "" &&
-      (deathDay === "" || deathMonth === "" || deathYear === "")
-    ) {
-      try {
-        const lunarDate = Lunar.fromYmd(
-          deathLunarYear,
-          deathLunarMonth,
-          deathLunarDay,
-        );
-        const solarDate = lunarDate.getSolar();
-        finalDeathDay = solarDate.getDay();
-        finalDeathMonth = solarDate.getMonth();
-        finalDeathYear = solarDate.getYear();
-      } catch {
-        setError("Ngày âm lịch không hợp lệ. Vui lòng kiểm tra lại.");
-        setLoading(false);
-        return;
-      }
-    } else if (
-      isDeceased &&
-      deathDay !== "" &&
-      deathMonth !== "" &&
-      deathYear !== "" &&
-      (deathLunarDay === "" || deathLunarMonth === "" || deathLunarYear === "")
-    ) {
-      // Sync from Solar back to Lunar
-      try {
-        const solarDate = Solar.fromYmd(deathYear, deathMonth, deathDay);
-        const lunarDate = solarDate.getLunar();
-        finalDeathLunarDay = lunarDate.getDay();
-        finalDeathLunarMonth = Math.abs(lunarDate.getMonth());
-        finalDeathLunarYear = lunarDate.getYear();
-      } catch {
-        // Safe fallback if conversion fails
-      }
-    } else if (!isDeceased) {
-      // Clear all
-      finalDeathDay = "";
-      finalDeathMonth = "";
-      finalDeathYear = "";
-      finalDeathLunarDay = "";
-      finalDeathLunarMonth = "";
-      finalDeathLunarYear = "";
-    }
-
-    if (
-      isDeceased &&
-      !isValidDate(finalDeathDay, finalDeathMonth, finalDeathYear)
-    ) {
-      setError("Ngày mất không hợp lệ. Vui lòng kiểm tra lại.");
-      setLoading(false);
-      return;
-    }
-
-    if (
-      isDeceased &&
-      birthYear !== "" &&
-      finalDeathYear !== "" &&
-      finalDeathYear < birthYear
-    ) {
-      setError("Năm mất phải lớn hơn hoặc bằng năm sinh.");
-      setLoading(false);
-      return;
-    }
-
     try {
       let currentAvatarUrl = avatarUrl;
 
@@ -301,109 +210,52 @@ export default function MemberForm({
         birth_year: birthYear === "" ? null : Number(birthYear),
         birth_month: birthMonth === "" ? null : Number(birthMonth),
         birth_day: birthDay === "" ? null : Number(birthDay),
-        death_year:
-          isDeceased && finalDeathYear !== "" ? Number(finalDeathYear) : null,
-        death_month:
-          isDeceased && finalDeathMonth !== "" ? Number(finalDeathMonth) : null,
-        death_day:
-          isDeceased && finalDeathDay !== "" ? Number(finalDeathDay) : null,
-        death_lunar_year:
-          isDeceased && finalDeathLunarYear !== ""
-            ? Number(finalDeathLunarYear)
-            : null,
-        death_lunar_month:
-          isDeceased && finalDeathLunarMonth !== ""
-            ? Number(finalDeathLunarMonth)
-            : null,
-        death_lunar_day:
-          isDeceased && finalDeathLunarDay !== ""
-            ? Number(finalDeathLunarDay)
-            : null,
-        is_deceased: isDeceased,
-        is_in_law: isInLaw,
-        birth_order: birthOrder === "" ? null : Number(birthOrder),
-        generation: generation === "" ? null : Number(generation),
+        khoa_id: khoaId || null,
+        club_role_level: clubRolesHistory.length > 0 ? clubRolesHistory[0].role_level : 4,
+        club_role_title: clubRolesHistory.length > 0 ? clubRolesHistory[0].role_title : null,
+        club_roles_history: clubRolesHistory.filter(r => r.term !== ""),
+
         other_names: otherNames || null,
         avatar_url: url,
         note: note || null,
+        user_id: initialData?.user_id || null,
+
+        bio_long: bioLong || null,
+        status: statusOption === "Khác" ? (statusCustom || null) : (statusOption || null),
+        marital_status: maritalStatusOption === "Khác" ? (maritalStatusCustom || null) : (maritalStatusOption || null),
+        name_tag: nameTag || null,
+        company: company || null,
+        industry: industry || null,
+        skills: skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(Boolean) : null,
+        achievements: achievementsList.some(a => a.title.trim() || a.description.trim()) 
+          ? achievementsList.filter(a => a.title.trim() || a.description.trim()).map(a => JSON.stringify(a))
+          : null,
+        looking_for_connections: lookingForStr ? lookingForStr.split(',').map(s => s.trim()).filter(Boolean) : null,
+        occupation: occupation || null,
+        current_residence: currentResidence || null,
+
+        social_link: socialLink || null,
       });
 
       let currentPersonId = initialData?.id;
 
-      // For a new member, we must insert first to get the ID for the avatar filename
-      if (!isEditing || !currentPersonId) {
-        const { data: newPerson, error: createError } = await supabase
-          .from("persons")
-          .insert(getPersonData(currentAvatarUrl || null))
-          .select()
-          .single();
-        if (createError) throw createError;
-        currentPersonId = newPerson.id;
-      } else {
-        // Update existing member info first
-        const { error: updateError } = await supabase
-          .from("persons")
-          .update(getPersonData(currentAvatarUrl || null))
-          .eq("id", currentPersonId);
-        if (updateError) throw updateError;
-      }
+      const publicData = getPersonData(currentAvatarUrl || null);
+      
+      const normalizedPrivateData = {
+        phone_number: phoneNumber?.trim() || null,
+        occupation: occupation?.trim() || null,
+        current_residence: currentResidence?.trim() || null,
+      };
 
-      // 2. Handle Avatar Upload if a new file is selected (now we have currentPersonId)
-      if (avatarFile && currentPersonId) {
-        const fileExt = avatarFile.name.split(".").pop();
-        const slugName = slugify(fullName);
-        const fileName = `${currentPersonId}_${slugName}.${fileExt}`;
-        const filePath = `${fileName}`;
+      const hasPrivateData =
+        normalizedPrivateData.phone_number ||
+        normalizedPrivateData.occupation ||
+        normalizedPrivateData.current_residence;
 
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(filePath, avatarFile, { upsert: true });
+      // 3. Save via Action securely
+      const result = await saveMemberAction(currentPersonId, publicData, hasPrivateData ? normalizedPrivateData : null);
+      currentPersonId = (result.personId as string | undefined) || undefined;
 
-        if (uploadError) throw uploadError;
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("avatars").getPublicUrl(filePath);
-
-        currentAvatarUrl = publicUrl;
-
-        // Update the person with the final avatar URL
-        const { error: updateAvatarError } = await supabase
-          .from("persons")
-          .update({ avatar_url: currentAvatarUrl })
-          .eq("id", currentPersonId);
-        if (updateAvatarError) throw updateAvatarError;
-      }
-
-      // 3. Upsert private data (only if admin and currentPersonId exists)
-      if (isAdmin && currentPersonId) {
-        const normalizedData = {
-          person_id: currentPersonId,
-          phone_number: phoneNumber?.trim() || null,
-          occupation: occupation?.trim() || null,
-          current_residence: currentResidence?.trim() || null,
-        };
-
-        const hasData =
-          normalizedData.phone_number ||
-          normalizedData.occupation ||
-          normalizedData.current_residence;
-
-        if (hasData) {
-          const { error } = await supabase
-            .from("person_details_private")
-            .upsert(normalizedData);
-
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from("person_details_private")
-            .delete()
-            .eq("person_id", currentPersonId);
-
-          if (error) throw error;
-        }
-      }
       // After save: use callback if provided, otherwise fall back to page navigation
       if (!currentPersonId)
         throw new Error("Không lấy được ID thành viên sau khi lưu.");
@@ -413,9 +265,11 @@ export default function MemberForm({
         router.push("/dashboard/members/" + currentPersonId);
         router.refresh();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving member:", err);
-      setError((err as Error).message || "Failed to save member");
+      // Fallback formatting if it's an object from Supabase Postgres that lacks a 'message'
+      const errorMessage = err?.message || err?.details || (typeof err === "object" ? JSON.stringify(err) : String(err)) || "Failed to save member";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -493,78 +347,135 @@ export default function MemberForm({
             </div>
           </div>
 
-          <div className="flex items-center sm:mt-7 mt-2">
-            <label className="flex items-center gap-3 group">
-              <div className="relative flex items-center">
-                <input
-                  type="checkbox"
-                  checked={isInLaw}
-                  onChange={(e) => setIsInLaw(e.target.checked)}
-                  className="peer sr-only"
-                />
-                <div className="size-5 border-2 border-stone-300 rounded peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-colors flex items-center justify-center">
-                  <motion.svg
-                    initial={false}
-                    animate={{
-                      opacity: isInLaw ? 1 : 0,
-                      scale: isInLaw ? 1 : 0.5,
-                    }}
-                    className="size-3 text-white pointer-events-none"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={4}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </motion.svg>
-                </div>
+          <div>
+            <label className="block text-sm font-semibold text-stone-700 mb-1.5">
+              Khóa Sinh viên
+            </label>
+            <div className="relative">
+              <select
+                value={khoaId}
+                onChange={(e) => setKhoaId(e.target.value)}
+                className={`${inputClasses} appearance-none`}
+              >
+                <option value="">-- Chọn Khóa --</option>
+                {khoasList.map((k) => (
+                  <option key={k.id} value={k.id}>{k.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-stone-500">
+                <Settings2 className="size-4" />
               </div>
-              <span className="text-sm font-semibold text-stone-700 group-hover:text-amber-700 transition-colors">
-                Là con Dâu hoặc con Rể
-              </span>
-            </label>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-stone-700 mb-1.5">
-              Thứ tự sinh trong gia đình
-            </label>
-            <input
-              type="number"
-              min="1"
-              placeholder="Ví dụ: 1 (con trưởng), 2 (con thứ hai)..."
-              value={birthOrder}
-              onChange={(e) =>
-                setBirthOrder(e.target.value ? Number(e.target.value) : "")
-              }
-              className={inputClasses}
-            />
-            <p className="mt-1.5 text-xs text-stone-400 flex items-center gap-1">
-              <span>💡</span> Để trống nếu không rõ
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-stone-700 mb-1.5">
-              Thuộc đời thứ
-            </label>
-            <input
-              type="number"
-              min="1"
-              placeholder="Ví dụ: 1, 2, 3..."
-              value={generation}
-              onChange={(e) =>
-                setGeneration(e.target.value ? Number(e.target.value) : "")
-              }
-              className={inputClasses}
-            />
-            <p className="mt-1.5 text-xs text-stone-400 flex items-center gap-1">
-              <span>💡</span> Để trống nếu không rõ
-            </p>
+          {/* Club Info History */}
+          <div className="md:col-span-2 mt-4 border-t border-stone-100 pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+              <label className="block text-sm font-bold text-stone-700">Lịch sử Hoạt động CLB (Nhiệm kỳ & Chức vụ)</label>
+              <button
+                type="button"
+                onClick={() => setClubRolesHistory([...clubRolesHistory, { term: "", role_level: 4, department: "", role_title: "" }])}
+                className="px-3 py-1.5 flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-semibold rounded-lg transition-colors border border-amber-200/60 w-fit"
+              >
+                <Plus className="size-4" />
+                Thêm Nhiệm kỳ hoạt động
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {clubRolesHistory.map((role, index) => (
+                <div key={index} className="bg-stone-50/80 p-4 sm:p-6 rounded-2xl border border-stone-200 flex flex-col sm:flex-row gap-4 sm:gap-6 relative group transition-all focus-within:border-amber-300">
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                        Nhiệm kỳ <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: 2020-2021"
+                        className="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 bg-white"
+                        value={role.term}
+                        required
+                        onChange={(e) => {
+                          const newHistory = [...clubRolesHistory];
+                          newHistory[index].term = e.target.value;
+                          setClubRolesHistory(newHistory);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                        Phòng / Ban
+                      </label>
+                      <select
+                        className="w-full px-3 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 bg-white text-sm"
+                        value={role.department || ""}
+                        onChange={(e) => {
+                          const newHistory = [...clubRolesHistory];
+                          newHistory[index].department = e.target.value;
+                          setClubRolesHistory(newHistory);
+                        }}
+                      >
+                        <option value="">-- Chọn --</option>
+                        {PREDEFINED_DEPARTMENTS.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                        Cấp bậc sơ đồ
+                      </label>
+                      <select
+                        className="w-full px-3 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 bg-white text-sm"
+                        value={role.role_level ?? 4}
+                        onChange={(e) => {
+                          const newHistory = [...clubRolesHistory];
+                          newHistory[index].role_level = Number(e.target.value);
+                          setClubRolesHistory(newHistory);
+                        }}
+                      >
+                        <option value={0}>Chủ nhiệm</option>
+                        <option value={1}>Phó Chủ nhiệm</option>
+                        <option value={2}>Trưởng ban / Quản lý</option>
+                        <option value={3}>Phó ban</option>
+                        <option value={4}>Thành viên</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                        Chức danh cụ thể
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Trưởng ban..."
+                        className="w-full px-3 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 bg-white text-stone-800 text-sm"
+                        value={role.role_title}
+                        onChange={(e) => {
+                          const newHistory = [...clubRolesHistory];
+                          newHistory[index].role_title = e.target.value;
+                          setClubRolesHistory(newHistory);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {clubRolesHistory.length > 1 && (
+                    <div className="absolute right-2 top-2 sm:relative sm:right-auto sm:top-auto flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newHistory = clubRolesHistory.filter((_, i) => i !== index);
+                          setClubRolesHistory(newHistory);
+                        }}
+                        className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all shadow-sm sm:shadow-none bg-white sm:bg-transparent"
+                      >
+                        <Trash2 className="size-5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="md:col-span-2 mt-2">
@@ -704,238 +615,203 @@ export default function MemberForm({
             </div>
           </div>
 
-          <div className="md:col-span-2 bg-stone-50/50 p-5 rounded-2xl border border-stone-200/60 shadow-xs">
-            <div className="flex flex-col gap-4">
-              <label className="flex items-center gap-3 group">
-                <div className="relative flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={isDeceased}
-                    onChange={(e) => {
-                      setIsDeceased(e.target.checked);
-                      if (!e.target.checked) {
-                        setDeathYear("");
-                        setDeathMonth("");
-                        setDeathDay("");
-                        setDeathLunarYear("");
-                        setDeathLunarMonth("");
-                        setDeathLunarDay("");
-                      }
-                    }}
-                    className="peer sr-only"
-                  />
-                  <div className="size-5 border-2 border-stone-300 rounded peer-checked:bg-stone-600 peer-checked:border-stone-600 transition-colors flex items-center justify-center">
-                    <motion.svg
-                      initial={false}
-                      animate={{
-                        opacity: isDeceased ? 1 : 0,
-                        scale: isDeceased ? 1 : 0.5,
-                      }}
-                      className="size-3 text-white pointer-events-none"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={4}
+
+
+          <div className="md:col-span-2 border-t border-stone-100 pt-6 mt-2">
+            <h4 className="text-md font-bold text-stone-800 mb-4">Hồ sơ chuyên môn (CV)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div>
+                    <label className="block text-sm font-semibold text-stone-700 mb-1.5">Name Tag (Học vị / Danh xưng)</label>
+                    <input type="text" value={nameTag} onChange={e => setNameTag(e.target.value)} className={inputClasses} placeholder="Ví dụ: AI Trainer, Du Học Sinh Úc..." />
+                 </div>
+                 <div>
+                    <label className="block text-sm font-semibold text-stone-700 mb-1.5">Trạng thái hiện tại</label>
+                    <select
+                      value={statusOption}
+                      onChange={(e) => setStatusOption(e.target.value)}
+                      className={inputClasses}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
+                      <option value="">-- Chọn trạng thái --</option>
+                      {PREDEFINED_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    {statusOption === "Khác" && (
+                      <input 
+                        type="text" 
+                        value={statusCustom} 
+                        onChange={e => setStatusCustom(e.target.value)} 
+                        className={`mt-2 ${inputClasses}`} 
+                        placeholder="Nhập trạng thái của bạn..." 
                       />
-                    </motion.svg>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-stone-700 group-hover:text-stone-900 transition-colors">
-                  Đã mất
-                </span>
-              </label>
-            </div>
-
-            <AnimatePresence>
-              {isDeceased && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                  animate={{ opacity: 1, height: "auto", marginTop: 20 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                  className="overflow-hidden"
+                    )}
+                 </div>
+                 <div>
+                    <label className="block text-sm font-semibold text-stone-700 mb-1.5">Tình trạng mối quan hệ</label>
+                    <select
+                      value={maritalStatusOption}
+                      onChange={(e) => setMaritalStatusOption(e.target.value)}
+                      className={inputClasses}
+                    >
+                      <option value="">-- Chọn --</option>
+                      {PREDEFINED_MARITAL.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    {maritalStatusOption === "Khác" && (
+                      <input 
+                        type="text" 
+                        value={maritalStatusCustom} 
+                        onChange={e => setMaritalStatusCustom(e.target.value)} 
+                        className={`mt-2 ${inputClasses}`} 
+                        placeholder="Nhập tình trạng..." 
+                      />
+                    )}
+                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">Công ty / Tổ chức</label>
+                <input type="text" value={company} onChange={e => setCompany(e.target.value)} className={inputClasses} placeholder="Tên công ty / Trường học" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">Ngành nghề (Industry)</label>
+                <input type="text" value={industry} onChange={e => setIndustry(e.target.value)} className={inputClasses} placeholder="Ví dụ: Bất động sản, IT..." />
+              </div>
+              <div className="md:col-span-2">
+                 <label className="block text-sm font-semibold text-stone-700 mb-1.5">Chuyên môn / Vị trí</label>
+                 <input type="text" value={occupation} onChange={e => setOccupation(e.target.value)} className={inputClasses} placeholder="Kỹ sư phần mềm, Designer..." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">Kỹ năng (Cách nhau bằng dấu phẩy)</label>
+                <input type="text" value={skillsStr} onChange={e => setSkillsStr(e.target.value)} className={inputClasses} placeholder="React, Marketing, Đàm phán..." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">Mục tiêu kết nối (Cách nhau bằng dấu phẩy)</label>
+                <input type="text" value={lookingForStr} onChange={e => setLookingForStr(e.target.value)} className={inputClasses} placeholder="Tìm đối tác dự án XYZ, Tìm mentor..." />
+              </div>
+            {/* Hành trình YECer */}
+            <div className="md:col-span-2 pt-4 border-t border-stone-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                <label className="block text-sm font-semibold text-stone-700">Sự kiện & Dấu mốc lịch sử</label>
+                <button
+                  type="button"
+                  onClick={() => setAchievementsList([...achievementsList, { time: "", title: "", description: "" }])}
+                  className="px-3 py-1.5 flex items-center gap-1.5 bg-stone-100/80 hover:bg-stone-200 text-stone-700 text-sm font-semibold rounded-lg transition-colors border border-stone-200/60 w-fit"
                 >
-                  <p className="text-[13px] text-stone-500 mb-4 italic">
-                    * Nhập Ngày Dương lịch hoặc Ngày Âm lịch. Hệ thống sẽ tự
-                    động tính toán và điền phần còn lại.
-                  </p>
+                  <Plus className="size-4" />
+                  Thêm cột mốc
+                </button>
+              </div>
 
-                  <div className="flex flex-col gap-5">
-                    {/* Lunar Date */}
-                    <div>
-                      <label className="block text-sm font-semibold text-stone-700 mb-2">
-                        Ngày mất (Âm lịch)
-                      </label>
-                      <div className="grid grid-cols-3 gap-3">
-                        <input
-                          type="number"
-                          placeholder="Ngày"
-                          min="1"
-                          max="31"
-                          value={deathLunarDay}
-                          onChange={(e) =>
-                            handleLunarDeathChange("day", e.target.value)
-                          }
-                          className={inputClasses}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Tháng"
-                          min="1"
-                          max="12"
-                          value={deathLunarMonth}
-                          onChange={(e) =>
-                            handleLunarDeathChange("month", e.target.value)
-                          }
-                          className={inputClasses}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Năm"
-                          value={deathLunarYear}
-                          onChange={(e) =>
-                            handleLunarDeathChange("year", e.target.value)
-                          }
-                          className={inputClasses}
-                        />
+              <div className="space-y-4">
+                {achievementsList.map((item, index) => (
+                  <div key={index} className="bg-white p-4 sm:p-5 rounded-2xl border border-stone-200 flex flex-col sm:flex-row gap-3 sm:gap-4 transition-all focus-within:shadow-sm focus-within:border-emerald-200 relative group">
+                    <div className="flex-1 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-1">
+                          <input
+                            type="text"
+                            placeholder="Thời gian (VD: 09/2024)"
+                            value={item.time}
+                            onChange={(e) => {
+                              const newList = [...achievementsList];
+                              newList[index].time = e.target.value;
+                              setAchievementsList(newList);
+                            }}
+                            className={inputClasses}
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <input
+                            type="text"
+                            placeholder="Tên sự kiện / Hoạt động"
+                            value={item.title}
+                            onChange={(e) => {
+                              const newList = [...achievementsList];
+                              newList[index].title = e.target.value;
+                              setAchievementsList(newList);
+                            }}
+                            className={inputClasses}
+                          />
+                        </div>
                       </div>
+                      <textarea
+                        rows={2}
+                        placeholder="Mô tả ngắn gọn về dấu mốc này..."
+                        value={item.description}
+                        onChange={(e) => {
+                          const newList = [...achievementsList];
+                          newList[index].description = e.target.value;
+                          setAchievementsList(newList);
+                        }}
+                        className={`${inputClasses} resize-y`}
+                      />
                     </div>
-
-                    {/* Solar Date */}
-                    <div>
-                      <label className="block text-sm font-semibold text-stone-700 mb-2">
-                        Ngày mất (Dương lịch)
-                      </label>
-                      <div className="grid grid-cols-3 gap-3">
-                        <input
-                          type="number"
-                          placeholder="Ngày"
-                          min="1"
-                          max="31"
-                          value={deathDay}
-                          onChange={(e) =>
-                            handleSolarDeathChange("day", e.target.value)
-                          }
-                          className={inputClasses}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Tháng"
-                          min="1"
-                          max="12"
-                          value={deathMonth}
-                          onChange={(e) =>
-                            handleSolarDeathChange("month", e.target.value)
-                          }
-                          className={inputClasses}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Năm"
-                          value={deathYear}
-                          onChange={(e) =>
-                            handleSolarDeathChange("year", e.target.value)
-                          }
-                          className={inputClasses}
-                        />
-                      </div>
+                    <div className="absolute right-4 top-4 sm:relative sm:right-auto sm:top-auto flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newList = achievementsList.filter((_, i) => i !== index);
+                          setAchievementsList(newList.length ? newList : [{ time: "", title: "", description: "" }]);
+                        }}
+                        className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      >
+                        <Trash2 className="size-5" />
+                      </button>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-stone-700 mb-1.5">
-              Ghi chú
-            </label>
-            <textarea
-              rows={3}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Thêm thông tin bổ sung, tiểu sử..."
-              className={`${inputClasses} resize-none`}
-            />
+                ))}
+              </div>
+            </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">Giới thiệu bản thân</label>
+                <textarea rows={4} value={bioLong} onChange={e => setBioLong(e.target.value)} className={`${inputClasses} resize-y`} placeholder="Đôi nét về kinh nghiệm, sở thích..." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-stone-700 mb-1.5">Địa chỉ hiện tại</label>
+                <input type="text" value={currentResidence} onChange={e => setCurrentResidence(e.target.value)} className={inputClasses} placeholder="Hà Nội, TP.HCM..." />
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Private Information Section (Admin Only) */}
-      {isAdmin && (
-        <motion.div
-          variants={formSectionVariants}
-          initial="hidden"
-          animate="show"
-          transition={{ delay: 0.1 }}
-          className="bg-linear-to-br from-amber-50/80 to-stone-50/80 p-5 sm:p-8 rounded-2xl border border-amber-200/50 shadow-sm relative overflow-hidden"
-        >
-          {/* Decorative Background Icon */}
-          <Lock className="absolute -right-6 -bottom-6 w-32 h-32 text-amber-500/5 rotate-12" />
-
-          <h3 className="text-lg sm:text-xl font-serif font-bold text-amber-900 mb-6 border-b border-amber-200/50 pb-4 flex items-center gap-2 relative z-10">
-            <span className="p-1.5 bg-amber-100/80 text-amber-700 rounded-lg shadow-xs">
-              <Lock className="size-4" />
-            </span>
-            <span>Thông tin riêng tư</span>
-            <span className="text-[10px] ml-auto sm:ml-2 font-bold bg-amber-200/80 text-amber-800 uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs border border-amber-300/60">
-              Chỉ Admin
-            </span>
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-            <div>
-              <label className="flex items-center gap-1.5 text-sm font-semibold text-amber-900/80 mb-1.5">
-                <Phone className="size-4" /> Số điện thoại
-              </label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                disabled={isDeceased}
-                placeholder="Ví dụ: 0912345678"
-                className={`${inputClasses} disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed`}
-              />
-              {isDeceased && (
-                <p className="text-[11px] font-medium text-rose-500 mt-1.5 flex items-center gap-1">
-                  <AlertCircle className="size-3" />
-                  Không thể nhập SĐT cho người đã mất
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="flex items-center gap-1.5 text-sm font-semibold text-amber-900/80 mb-1.5">
-                <Briefcase className="size-4" /> Nghề nghiệp
-              </label>
-              <input
-                type="text"
-                value={occupation}
-                onChange={(e) => setOccupation(e.target.value)}
-                placeholder="Ví dụ: Kỹ sư, Bác sĩ..."
-                className={inputClasses}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="flex items-center gap-1.5 text-sm font-semibold text-amber-900/80 mb-1.5">
-                <MapPin className="size-4" /> Nơi ở hiện tại
-              </label>
-              <input
-                type="text"
-                value={currentResidence}
-                onChange={(e) => setCurrentResidence(e.target.value)}
-                placeholder="Địa chỉ cư trú..."
-                className={inputClasses}
-              />
-            </div>
+      {/* Contact Information Section (Public) */}
+      <motion.div
+        variants={formSectionVariants}
+        initial="hidden"
+        animate="show"
+        transition={{ delay: 0.1 }}
+        className="bg-stone-50/80 p-5 sm:p-8 rounded-2xl border border-stone-200/80 shadow-sm relative overflow-hidden"
+      >
+        <h3 className="text-lg sm:text-xl font-serif font-bold text-stone-800 mb-6 border-b border-stone-100 pb-4 flex items-center gap-2 relative z-10">
+          <Phone className="size-5 text-amber-600" />
+          <span>Thông tin liên hệ</span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+          <div>
+            <label className="flex items-center gap-1.5 text-sm font-semibold text-stone-700 mb-1.5">
+              Số điện thoại
+            </label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="Ví dụ: 0912345678"
+              className={inputClasses}
+            />
           </div>
-        </motion.div>
-      )}
-
+          <div>
+            <label className="flex items-center gap-1.5 text-sm font-semibold text-stone-700 mb-1.5">
+              Link MXH (Facebook / LinkedIn)
+            </label>
+            <input
+              type="url"
+              value={socialLink}
+              onChange={(e) => setSocialLink(e.target.value)}
+              placeholder="https://facebook.com/..."
+              className={inputClasses}
+            />
+          </div>
+        </div>
+      </motion.div>
       <AnimatePresence>
         {error && (
           <motion.div

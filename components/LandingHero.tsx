@@ -52,17 +52,16 @@ export default function LandingHero({ siteName }: LandingHeroProps) {
             className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-amber-800 bg-white/60 rounded-full shadow-[0_2px_10px_-3px_rgba(0,0,0,0.1)] border border-amber-200/50 relative overflow-hidden group"
           >
             <Sparkles className="size-4 text-amber-500" />
-            Nền tảng gia phả hiện đại & bảo mật
+            Hệ thống quản lý thành viên YEC - NEU
             <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
           </motion.div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] font-serif font-bold text-stone-900 tracking-tight leading-[1.1] max-w-4xl">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] font-serif font-bold text-orange-500 tracking-tight leading-[1.1] max-w-4xl">
             <span className="block">{siteName}</span>
           </h1>
 
           <p className="text-lg sm:text-xl md:text-2xl text-stone-600 max-w-2xl mx-auto leading-relaxed font-light">
-            Gìn giữ và lưu truyền những giá trị, cội nguồn và truyền thống tốt
-            đẹp của dòng họ cho các thế hệ mai sau.
+            Kết nối giao lưu, quản lý và lưu giữ thông tin thành viên Câu lạc bộ Kinh Tế Trẻ qua các thế hệ.
           </p>
         </motion.div>
 
@@ -75,7 +74,7 @@ export default function LandingHero({ siteName }: LandingHeroProps) {
 
           <Link
             href="/login"
-            className="group inline-flex items-center justify-center gap-2 px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-bold text-white bg-stone-900 border border-stone-800 hover:bg-stone-800 hover:border-stone-700 rounded-2xl shadow-xl shadow-stone-900/10 hover:shadow-2xl hover:shadow-stone-900/20 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto overflow-hidden relative"
+            className="group inline-flex items-center justify-center gap-2 px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-bold text-white bg-linear-to-r from-orange-400/80 to-orange-500/80 backdrop-blur-lg border border-white/40 rounded-2xl shadow-[0_8px_32px_rgba(249,115,22,0.25)] hover:shadow-[0_16px_48px_rgba(249,115,22,0.4)] hover:from-orange-400/90 hover:to-orange-500/90 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto overflow-hidden relative"
           >
             <span className="relative z-10 flex items-center gap-3">
               Đăng nhập để xem thông tin
@@ -92,24 +91,24 @@ export default function LandingHero({ siteName }: LandingHeroProps) {
             {
               icon: <Users className="size-6 text-amber-700" />,
               title: "Quản lý Thành viên",
-              desc: "Cập nhật thông tin chi tiết, tiểu sử và hình ảnh của từng thành viên trong dòng họ một cách nhanh chóng và bảo mật.",
+              desc: "Cập nhật hồ sơ Mini-CV, kỹ năng, thành tích và hình ảnh của từng thành viên CLB qua các Khóa.",
             },
             {
               icon: <Network className="size-6 text-amber-700" />,
-              title: "Sơ đồ Sáng tạo",
-              desc: "Xem trực quan sơ đồ phả hệ, thế hệ và mối quan hệ gia đình với giao diện cây hiện đại, dễ thao tác.",
+              title: "Sơ đồ Tổ chức",
+              desc: "Xem trực quan sơ đồ bộ máy CLB theo từng Khóa: Ban Chủ nhiệm, Trưởng ban, Phó ban và Thành viên.",
             },
             {
               icon: <ShieldCheck className="size-6 text-amber-700" />,
-              title: "Bảo mật Tối đa",
-              desc: "Dữ liệu riêng tư như số điện thoại, quê quán được phân quyền chặt chẽ, bảo vệ an toàn trên hệ thống đám mây.",
+              title: "Bảo mật & Phân quyền",
+              desc: "Thông tin riêng tư được bảo vệ. Thành viên tự cập nhật hồ sơ, Admin duyệt thay đổi.",
             },
           ].map((feature, idx) => (
             <motion.div
               key={idx}
               variants={fadeIn}
               whileHover={{ y: -5 }}
-              className="bg-white/70 backdrop-blur-xl p-8 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:bg-white transition-all duration-500 flex flex-col items-start group relative overflow-hidden"
+              className="bg-linear-to-br from-white/60 to-white/20 backdrop-blur-xl p-8 rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(249,115,22,0.05)] hover:shadow-[0_16px_48px_rgba(249,115,22,0.15)] hover:from-white/70 hover:to-white/30 transition-all duration-500 flex flex-col items-start group relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-amber-100/50 to-transparent rounded-bl-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 

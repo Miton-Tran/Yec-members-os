@@ -1,36 +1,59 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Circle, List, ListTree, Network } from "lucide-react";
+import { Circle, Info, List, Network } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
 
-export type ViewMode = "list" | "tree" | "mindmap" | "bubble";
+export type ViewMode = "list" | "tree" | "mindmap" | "bubble" | "overview";
 
 export default function ViewToggle() {
-  const { view: currentView, setView } = useDashboard();
+  const { view: currentView, setView, currentKhoaId, pageMode } = useDashboard();
 
-  const tabs = [
-    {
-      id: "list",
-      label: "Danh sách",
-      icon: <List className="size-6 sm:size-4" />,
-    },
-    {
-      id: "tree",
-      label: "Sơ đồ cây",
-      icon: <Network className="size-6 sm:size-4" />,
-    },
-    {
-      id: "mindmap",
-      label: "Mindmap",
-      icon: <ListTree className="size-6 sm:size-4" />,
-    },
-    {
-      id: "bubble",
-      label: "Bong bóng",
-      icon: <Circle className="size-6 sm:size-4" />,
-    },
-  ] as const;
+  let tabs;
+  
+  if (pageMode === "tree") {
+    tabs = [
+      {
+        id: "tree",
+        label: "Sơ đồ cây",
+        icon: <Network className="size-6 sm:size-4" />,
+      },
+      {
+        id: "bubble",
+        label: "Bong bóng",
+        icon: <Circle className="size-6 sm:size-4" />,
+      },
+      {
+        id: "list",
+        label: "Chi tiết thành viên",
+        icon: <List className="size-6 sm:size-4" />,
+      },
+    ] as const;
+  } else {
+    // pageMode === "members"
+    if (currentKhoaId) {
+      tabs = [
+        {
+          id: "overview",
+          label: "Tổng quan khóa",
+          icon: <Info className="size-6 sm:size-4" />,
+        },
+        {
+          id: "list",
+          label: "Chi tiết thành viên",
+          icon: <List className="size-6 sm:size-4" />,
+        },
+      ] as const;
+    } else {
+      tabs = [
+        {
+          id: "list",
+          label: "Chi tiết thành viên",
+          icon: <List className="size-6 sm:size-4" />,
+        },
+      ] as const;
+    }
+  }
 
   return (
     <div className="flex bg-stone-200/50 p-1.5 rounded-full shadow-inner w-fit mx-auto mt-4 mb-2 relative border border-stone-200/60 backdrop-blur-sm z-10">

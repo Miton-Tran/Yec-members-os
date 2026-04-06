@@ -1,34 +1,21 @@
-import { getTodayLunar } from "@/utils/dateHelpers";
-import { computeEvents } from "@/utils/eventHelpers";
 import { getIsAdmin, getSupabase } from "@/utils/supabase/queries";
 import {
   ArrowRight,
   BarChart2,
-  Cake,
   CalendarDays,
   Database,
-  Flower2,
-  GitMerge,
   Network,
   Star,
   Users,
+  Search,
+  UserCircle
 } from "lucide-react";
 import Link from "next/link";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
 /* ── Event type helpers ───────────────────────────────────────────── */
 const eventTypeConfig = {
-  birthday: {
-    icon: Cake,
-    label: "Sinh nhật",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-  },
-  death_anniversary: {
-    icon: Flower2,
-    label: "Ngày giỗ",
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-  },
   custom_event: {
     icon: Star,
     label: "Sự kiện",
@@ -42,75 +29,70 @@ export default async function DashboardLaunchpad() {
   const supabase = await getSupabase();
 
   /* ── Fetch events data ────────────────────────────────────────── */
-  const { data: persons } = await supabase
-    .from("persons")
-    .select(
-      "id, full_name, birth_year, birth_month, birth_day, death_year, death_month, death_day, death_lunar_year, death_lunar_month, death_lunar_day, is_deceased",
-    );
-
   const { data: customEvents } = await supabase
     .from("custom_events")
-    .select("id, name, content, event_date, location, created_by");
+    .select("id, name, content, event_date, location, created_by")
+    .gte("event_date", new Date().toISOString())
+    .order("event_date", { ascending: true })
+    .limit(5);
 
-  const allEvents = computeEvents(persons ?? [], customEvents ?? []);
-  const upcomingEvents = allEvents.filter(
-    (e) => e.daysUntil >= 0 && e.daysUntil <= 30,
-  );
+  const upcomingEvents = customEvents || [];
 
-  const lunar = getTodayLunar();
+  const today = new Date();
+  const solarStr = format(today, "EEEE, dd 'tháng' M, yyyy", { locale: vi });
 
   /* ── Feature lists ────────────────────────────────────────────── */
   const publicFeatures = [
     {
-      title: "Cây gia phả",
-      description: "Xem và tương tác với sơ đồ dòng họ",
+      title: "Cây Tổ Chức",
+      description: "Xem lại bộ máy hoạt động CLB theo các nhiệm kỳ",
       icon: <Network className="size-8 text-amber-600" />,
-      href: "/dashboard/members",
+      href: "/dashboard/yec-tree-members",
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200/60",
       hoverColor: "hover:border-amber-400 hover:shadow-amber-100",
     },
-    // {
-    //   title: "Sự kiện",
-    //   description: "Quản lý ngày giỗ, họp họ và các dịp quan trọng",
-    //   icon: <CalendarClock className="size-8 text-emerald-600" />,
-    //   href: "/dashboard/events",
-    //   bgColor: "bg-emerald-50",
-    //   borderColor: "border-emerald-200/60",
-    //   hoverColor: "hover:border-emerald-400 hover:shadow-emerald-100",
-    // },
     {
-      title: "Tra cứu danh xưng",
-      description: "Hệ thống gọi tên họ hàng chuẩn xác",
-      icon: <GitMerge className="size-8 text-blue-600" />,
-      href: "/dashboard/kinship",
+      title: "Thành Viên YEC",
+      description: "Quản lý và xem lịch sử CLB theo các Khóa",
+      icon: <Users className="size-8 text-blue-600" />,
+      href: "/dashboard/yec-members",
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200/60",
       hoverColor: "hover:border-blue-400 hover:shadow-blue-100",
     },
     {
-      title: "Thống kê gia phả",
-      description: "Tổng quan dữ liệu và biểu đồ phân tích",
+      title: "Tìm kiếm & Kết nối",
+      description: "Tra cứu thành viên, chuyên môn và kỹ năng dự án",
+      icon: <Search className="size-8 text-emerald-600" />,
+      href: "/dashboard/search",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200/60",
+      hoverColor: "hover:border-emerald-400 hover:shadow-emerald-100",
+    },
+    {
+      title: "Hồ Sơ Của Tôi",
+      description: "Cập nhật CV, kinh nghiệm để dễ dàng kết nối",
+      icon: <UserCircle className="size-8 text-emerald-600" />,
+      href: "/dashboard/profile",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200/60",
+      hoverColor: "hover:border-emerald-400 hover:shadow-emerald-100",
+    },
+    {
+      title: "Thống kê CLB",
+      description: "Tổng quan dữ liệu và hệ sinh thái thành viên",
       icon: <BarChart2 className="size-8 text-purple-600" />,
       href: "/dashboard/stats",
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200/60",
       hoverColor: "hover:border-purple-400 hover:shadow-purple-100",
     },
-    // {
-    //   title: "Giới thiệu & Liên hệ",
-    //   description: "Thông tin về ứng dụng và đội ngũ phát triển",
-    //   icon: <Info className="size-8 text-stone-600" />,
-    //   href: "/about",
-    //   bgColor: "bg-stone-50",
-    //   borderColor: "border-stone-200/60",
-    //   hoverColor: "hover:border-stone-400 hover:shadow-stone-100",
-    // },
   ];
 
   const adminFeatures = [
     {
-      title: "Quản lý Người dùng",
+      title: "Quản lý Thành viên",
       description: "Phê duyệt tài khoản và phân quyền",
       icon: <Users className="size-8 text-rose-600" />,
       href: "/dashboard/users",
@@ -119,8 +101,8 @@ export default async function DashboardLaunchpad() {
       hoverColor: "hover:border-rose-400 hover:shadow-rose-100",
     },
     {
-      title: "Thứ tự gia phả",
-      description: "Sắp xếp và xem cấu trúc hệ thống",
+      title: "Quản lý Khóa",
+      description: "Tạo thẻ và cấu hình các thế hệ YEC",
       icon: <Network className="size-8 text-indigo-600" />,
       href: "/dashboard/lineage",
       bgColor: "bg-indigo-50",
@@ -140,16 +122,11 @@ export default async function DashboardLaunchpad() {
 
   return (
     <main className="flex-1 flex flex-col p-4 sm:p-8 max-w-7xl mx-auto w-full">
-      {/* <div className="mb-8 sm:mb-12 text-center sm:text-left">
-        <h1 className="title">Bảng điều khiển</h1>
-      </div> */}
-
       {/* ── Today's Date & Upcoming Events ─────────────────── */}
       <Link
         href="/dashboard/events"
         className="group relative block overflow-hidden rounded-3xl bg-white border border-stone-200/60 shadow-sm hover:shadow-stone-100 hover:border-stone-400 mb-10 transition-all duration-300 hover:-translate-y-1"
       >
-        {/* Subtle background flair */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-50"></div>
 
         <div className="relative p-6 sm:p-8 flex flex-col md:flex-row gap-6 sm:gap-8 items-center">
@@ -159,20 +136,14 @@ export default async function DashboardLaunchpad() {
               <CalendarDays className="size-7" />
             </div>
             <div className="mt-1">
-              <p className="text-xl sm:text-2xl font-bold text-stone-800 tracking-tight">
-                {lunar.solarStr}
+              <p className="text-xl sm:text-2xl font-bold text-stone-800 tracking-tight capitalize">
+                {solarStr}
               </p>
               <div className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-50 border border-stone-100">
                 <span className="text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Âm lịch:
-                </span>
-                <span className="text-sm font-semibold text-stone-700">
-                  {lunar.lunarDayStr}
+                  YEC MEMBERS PORTAL
                 </span>
               </div>
-              <p className="text-sm pl-1 flex items-center justify-center md:justify-start gap-1 text-stone-500 mt-2 font-medium">
-                Năm {lunar.lunarYear}
-              </p>
             </div>
           </div>
 
@@ -186,46 +157,35 @@ export default async function DashboardLaunchpad() {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full size-2 bg-amber-500"></span>
                     </span>
-                    Sự kiện 30 ngày tới ({upcomingEvents.length})
+                    Sự kiện sắp tới ({upcomingEvents.length})
                   </p>
                   <ArrowRight className="size-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all duration-300" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {upcomingEvents.slice(0, 4).map((evt, i) => {
-                    const cfg = eventTypeConfig[evt.type];
-                    const Icon = cfg.icon;
+                  {upcomingEvents.slice(0, 4).map((evt: any, i: number) => {
+                    const Icon = eventTypeConfig.custom_event.icon;
                     return (
                       <div
                         key={i}
                         className="flex items-center gap-3.5 p-3 rounded-2xl bg-stone-50/50 hover:bg-stone-50 border border-transparent hover:border-stone-100 transition-all duration-300 cursor-pointer"
                       >
                         <div
-                          className={`size-10 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0 shadow-sm border border-white`}
+                          className={`size-10 rounded-xl ${eventTypeConfig.custom_event.bg} flex items-center justify-center shrink-0 shadow-sm border border-white`}
                         >
-                          <Icon className={`size-4 ${cfg.color}`} />
+                          <Icon className={`size-4 ${eventTypeConfig.custom_event.color}`} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <span className="text-sm font-semibold text-stone-700 truncate block">
-                            {evt.personName}
+                            {evt.name}
                           </span>
                           <span className="text-xs text-stone-500 font-medium pt-0.5 block">
-                            {evt.daysUntil === 0
-                              ? "Hôm nay"
-                              : evt.daysUntil === 1
-                                ? "Ngày mai"
-                                : `${evt.daysUntil} ngày nữa`}{" "}
-                            · {evt.eventDateLabel}
+                            {format(new Date(evt.event_date), "dd/MM/yyyy", { locale: vi })}
                           </span>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                {upcomingEvents.length > 4 && (
-                  <p className="text-xs text-stone-400 mt-2 text-center sm:text-left font-medium">
-                    + {upcomingEvents.length - 4} sự kiện khác đang chờ...
-                  </p>
-                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full gap-3 opacity-80 py-6">
@@ -233,10 +193,10 @@ export default async function DashboardLaunchpad() {
                   <CalendarDays className="size-6" />
                 </div>
                 <p className="text-stone-500 text-center font-medium px-4">
-                  Không có sự kiện nào trong 30 ngày tới.
+                  Không có sự kiện mới được cập nhật.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-stone-400 mt-1 font-medium group-hover:text-stone-600 transition-colors">
-                  <span>Xem sự kiện trong năm</span>
+                  <span>Tạo sự kiện mới</span>
                   <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
@@ -248,10 +208,6 @@ export default async function DashboardLaunchpad() {
       {/* ── Feature Grid ──────────────────────────────────── */}
       <div className="space-y-12">
         <section>
-          {/* <h3 className="text-xl font-serif font-bold text-stone-700 mb-6 flex items-center gap-2">
-            <span className="w-8 h-px bg-stone-300 rounded-full"></span>
-            Chức năng chung
-          </h3> */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {publicFeatures.map((feat) => (
               <Link

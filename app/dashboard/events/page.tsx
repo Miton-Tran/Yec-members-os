@@ -1,14 +1,15 @@
 import { DashboardProvider } from "@/components/DashboardContext";
 import EventsList from "@/components/EventsList";
 import MemberDetailModal from "@/components/MemberDetailModal";
-import { getSupabase } from "@/utils/supabase/queries";
+import { getProfile, getSupabase } from "@/utils/supabase/queries";
 
 export const metadata = {
-  title: "Sự kiện gia phả",
+  title: "Lịch trình & Sự kiện CLB",
 };
 
 export default async function EventsPage() {
   const supabase = await getSupabase();
+  const profile = await getProfile();
 
   const [personsRes, customEventsRes] = await Promise.all([
     supabase
@@ -28,9 +29,9 @@ export default async function EventsPage() {
     <DashboardProvider>
       <div className="flex-1 w-full relative flex flex-col pb-12">
         <div className="w-full relative z-20 py-6 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
-          <h1 className="title">Sự kiện gia phả</h1>
+          <h1 className="title">Lịch trình & Sự kiện</h1>
           <p className="text-stone-500 mt-1 text-sm">
-            Sinh nhật, ngày giỗ (âm lịch) và các sự kiện tuỳ chỉnh
+            Quản lý sinh nhật thành viên và các sự kiện chung của Câu lạc bộ.
           </p>
         </div>
 
@@ -38,6 +39,7 @@ export default async function EventsPage() {
           <EventsList
             persons={persons ?? []}
             customEvents={customEvents ?? []}
+            userRole={profile?.role || "member"}
           />
         </main>
       </div>
