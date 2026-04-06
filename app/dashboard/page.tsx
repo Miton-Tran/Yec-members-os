@@ -8,7 +8,8 @@ import {
   Star,
   Users,
   Search,
-  UserCircle
+  UserCircle,
+  Info
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -87,6 +88,15 @@ export default async function DashboardLaunchpad() {
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200/60",
       hoverColor: "hover:border-purple-400 hover:shadow-purple-100",
+    },
+    {
+      title: "Giới thiệu & Hướng dẫn",
+      description: "Tìm hiểu thông tin và cách sử dụng nền tảng YEC Members",
+      icon: <Info className="size-8 text-orange-600" />,
+      href: "/about",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-200/60",
+      hoverColor: "hover:border-orange-400 hover:shadow-orange-100",
     },
   ];
 
