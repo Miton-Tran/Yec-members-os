@@ -203,6 +203,28 @@ export default function MemberForm({
     try {
       let currentAvatarUrl = avatarUrl;
 
+      // Handle Image Upload First
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split(".").pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, avatarFile);
+
+        if (uploadError) {
+          setError("Lỗi khi tải ảnh lên: " + uploadError.message);
+          setLoading(false);
+          return;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(fileName);
+          
+        currentAvatarUrl = publicUrlData.publicUrl;
+      }
+
       // Update person data helper to avoid duplication
       const getPersonData = (url: string | null) => ({
         full_name: fullName,
