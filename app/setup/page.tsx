@@ -9,7 +9,26 @@ export default async function SetupPage() {
   let schemaContent = "";
   try {
     const schemaPath = path.join(process.cwd(), "docs", "schema.sql");
-    schemaContent = await fs.readFile(schemaPath, "utf-8");
+    let content = await fs.readFile(schemaPath, "utf-8");
+
+    // Thêm các file migration
+    const migrationsDir = path.join(process.cwd(), "docs", "database");
+    try {
+      const files = await fs.readdir(migrationsDir);
+      const sqlFiles = files.filter(f => f.endsWith('.sql')).sort();
+      for (const file of sqlFiles) {
+        const filePath = path.join(migrationsDir, file);
+        const fileContent = await fs.readFile(filePath, "utf-8");
+        content += "\n\n-- ==========================================\n";
+        content += "-- MIGRATION: " + file + "\n";
+        content += "-- ==========================================\n\n";
+        content += fileContent;
+      }
+    } catch (migErr) {
+      console.warn("Không tìm thấy hoặc không thể đọc thư mục migrations:", migErr);
+    }
+    
+    schemaContent = content;
   } catch (error) {
     console.error("Error reading schema.sql:", error);
     schemaContent =
