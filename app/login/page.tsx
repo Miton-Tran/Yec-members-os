@@ -47,6 +47,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -57,7 +58,18 @@ export default function LoginPage() {
     setSuccessMessage(null);
 
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}`,
+        });
+
+        if (error) {
+          setError(error.message);
+        } else {
+          setSuccessMessage("Đã gửi email khôi phục! Vui lòng kiểm tra hộp thư của bạn.");
+          setTimeout(() => setIsForgotPassword(false), 3000);
+        }
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -120,7 +132,7 @@ export default function LoginPage() {
               router.refresh();
             } else {
               setSuccessMessage(
-                "Đăng ký thành công! Vui lòng chờ admin kích hoạt tài khoản để xem nội dung.",
+                "Đăng ký thành công!\nVui lòng kiểm tra email để kích hoạt tài khoản để xem nội dung.",
               );
               setIsLogin(true); // Switch back to login view
               setConfirmPassword(""); // clear confirm password
@@ -165,10 +177,12 @@ export default function LoginPage() {
               <Shield className="size-8 text-amber-600" />
             </Link>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight">
-              {isLogin ? "Đăng nhập" : "Đăng ký"}
+              {isForgotPassword ? "Khôi phục mật khẩu" : (isLogin ? "Đăng nhập" : "Đăng ký")}
             </h2>
-            <p className="mt-3 text-sm text-stone-500 font-medium tracking-wide">
-              {isLogin
+            <p className="mt-3 text-sm text-stone-500 font-medium tracking-wide whitespace-pre-line">
+              {isForgotPassword
+                ? "Nhập email của bạn để nhận liên kết\nđặt lại mật khẩu mới."
+                : isLogin
                 ? "Đăng nhập để truy cập nền tảng nội bộ."
                 : "Tạo tài khoản thành viên mới."}
             </p>
@@ -188,7 +202,7 @@ export default function LoginPage() {
           <form className="space-y-5 relative z-10" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <AnimatePresence>
-                {!isLogin && (
+                {!isLogin && !isForgotPassword && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -253,31 +267,57 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="relative">
-                <label
-                  htmlFor="password"
-                  className="block text-[13px] font-semibold text-stone-600 mb-1.5 ml-1"
-                >
-                  Mật khẩu
-                </label>
-                <div className="relative flex items-center group">
-                  <KeyRound className="absolute left-3.5 size-5 text-stone-400 group-focus-within:text-amber-500 transition-colors" />
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete={isLogin ? "current-password" : "new-password"}
-                    required
-                    className="bg-white/50 text-stone-900 placeholder-stone-400 block w-full rounded-xl border border-stone-200/80 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] focus:border-amber-400 focus:ring-amber-400 focus:bg-white pl-11 pr-4 py-3.5 transition-all duration-200 outline-none"
-                    placeholder="Nhập mật khẩu"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-              </div>
+              <AnimatePresence>
+                {!isForgotPassword && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative overflow-hidden"
+                  >
+                    <div className="flex justify-between items-end mb-1.5 ml-1">
+                      <label
+                        htmlFor="password"
+                        className="block text-[13px] font-semibold text-stone-600"
+                      >
+                        Mật khẩu
+                      </label>
+                      {isLogin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsForgotPassword(true);
+                            setError(null);
+                            setSuccessMessage(null);
+                          }}
+                          className="text-[12px] font-semibold text-amber-600 hover:text-amber-700 hover:underline mr-1"
+                          tabIndex={-1}
+                        >
+                          Quên mật khẩu?
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative flex items-center group">
+                      <KeyRound className="absolute left-3.5 size-5 text-stone-400 group-focus-within:text-amber-500 transition-colors" />
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete={isLogin ? "current-password" : "new-password"}
+                        required={!isForgotPassword}
+                        className="bg-white/50 text-stone-900 placeholder-stone-400 block w-full rounded-xl border border-stone-200/80 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] focus:border-amber-400 focus:ring-amber-400 focus:bg-white pl-11 pr-4 py-3.5 transition-all duration-200 outline-none"
+                        placeholder="Nhập mật khẩu"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <AnimatePresence>
-                {!isLogin && (
+                {!isLogin && !isForgotPassword && (
                   <motion.div
                     initial={{ opacity: 0, height: 0, marginTop: 0 }}
                     animate={{ opacity: 1, height: "auto", marginTop: 16 }}
@@ -365,8 +405,8 @@ export default function LoginPage() {
                   </span>
                 ) : (
                   <>
-                    {isLogin ? "Đăng nhập" : "Tạo tài khoản"}
-                    {!isLogin && <UserPlus className="size-4 ml-1" />}
+                    {isForgotPassword ? "Gửi email khôi phục" : (isLogin ? "Đăng nhập" : "Tạo tài khoản")}
+                    {!isLogin && !isForgotPassword && <UserPlus className="size-4 ml-1" />}
                   </>
                 )}
               </button>
@@ -382,6 +422,10 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
+                  if (isForgotPassword) {
+                    setIsForgotPassword(false);
+                    return;
+                  }
                   if (isLogin && isDemo) {
                     setError(
                       "Đây là trang demo, bạn không cần phải tạo tài khoản. Hãy sử dụng tài khoản demo để truy cập với toàn bộ quyền.",
@@ -394,9 +438,9 @@ export default function LoginPage() {
                 }}
                 className="w-full text-sm font-semibold text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200/80 py-3.5 rounded-xl shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)] focus:outline-none transition-all duration-200"
               >
-                {isLogin
-                  ? "Chưa có tài khoản? Đăng ký ngay"
-                  : "Đã có tài khoản? Đăng nhập"}
+                {isForgotPassword 
+                  ? "Quay lại đăng nhập"
+                  : (isLogin ? "Chưa có tài khoản? Đăng ký ngay" : "Đã có tài khoản? Đăng nhập")}
               </button>
             </div>
           </form>

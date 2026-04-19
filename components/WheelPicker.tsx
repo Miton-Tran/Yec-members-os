@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 export default function WheelPicker({
   options,
@@ -33,6 +34,18 @@ export default function WheelPicker({
       }
     }
   }, []); // Only on mount
+
+  const handleStep = (direction: 1 | -1) => {
+    const currentIndex = options.findIndex((o) => o.value === value);
+    let newIndex = currentIndex + direction;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= options.length) newIndex = options.length - 1;
+    
+    onChange(options[newIndex].value);
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: newIndex * itemHeight, behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="relative h-[48px] bg-transparent overflow-hidden group w-full">
@@ -79,6 +92,25 @@ export default function WheelPicker({
         
         {/* Padding Bottom */}
         <div className="h-[10px]" />
+      </div>
+
+      {/* Up/Down Controls */}
+      <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-1 px-0.5 bg-stone-50/80 backdrop-blur-sm border-l border-white/50 w-[24px]">
+        <button
+          type="button"
+          onClick={() => handleStep(-1)}
+          className="flex-1 flex items-center justify-center text-stone-400 hover:text-amber-500 hover:bg-white rounded-t-sm transition-colors active:scale-95"
+        >
+          <ChevronUp className="size-4" />
+        </button>
+        <div className="h-px bg-stone-200/50 w-full" />
+        <button
+          type="button"
+          onClick={() => handleStep(1)}
+          className="flex-1 flex items-center justify-center text-stone-400 hover:text-amber-500 hover:bg-white rounded-b-sm transition-colors active:scale-95"
+        >
+          <ChevronDown className="size-4" />
+        </button>
       </div>
     </div>
   );
